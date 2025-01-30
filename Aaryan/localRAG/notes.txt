@@ -1,0 +1,10 @@
+Local RAG project
+
+prelimary notes:
+- Retrieval - find relevant info in query --> retrieve passages of text related to the 'subject' of the query
+- Augment - tae the relevant info and augment our input - input (prompt) to an LLM
+- Generation - after RA, pass the augmented input/prompt to LLM to generate outputs
+
+Benefits:
+- prevent hallucinations. more factual (based on relevant info)
+- work with custom data
