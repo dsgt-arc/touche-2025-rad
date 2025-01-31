@@ -45,3 +45,38 @@ In the docker container, run the pytest command:
 ```bash
 pytest
 ```
+
+### running the app
+
+Use docker compose to run the app:
+
+```bash
+docker compose up
+```
+
+Alternatively:
+
+```bash
+docker compose run --service-ports app streamlit run app.py
+```
+
+If you are on your bare system, install all the python dependencies:
+
+```bash
+pip install uv
+uv venv .venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+Install the package itself in editable mode:
+
+```bash
+uv pip install -e .
+```
+
+Then run the app:
+
+```bash
+streamlit run app.py
+```
