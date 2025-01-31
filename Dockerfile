@@ -4,9 +4,10 @@ RUN apt-get -y update && \
      apt-get -y install default-jre
 
 WORKDIR /app
-RUN pip install --upgrade pip
+ENV UV_SYSTEM_PYTHON=1
+RUN pip install --upgrade pip uv
 COPY requirements.txt pyproject.toml /app/
-RUN pip install -r requirements.txt
+RUN uv pip install -r requirements.txt
 
 COPY . /app
-RUN pip install -e .
+RUN uv pip install -e .
