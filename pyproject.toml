@@ -1,0 +1,28 @@
+[project]
+name = "touche-rad"
+version = "0.1.0"
+authors = [
+    { name = "Aaryan Potdar", email = "apotdar31@gatech.edu" },
+    { name = "Anthony Miyaguchi", email = "acmiyaguchi@gatech.edu" },
+    { name = "Conor Johnston", email = "cjohnston49@gatech.edu" }
+]
+description = "DS@GT CLEF Touche 2025 RAD"
+readme = "README.md"
+requires-python = ">=3.8"
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/dsgt-kaggle-clef/touche-2025-rad"
+Issues = "https://github.com/dsgt-kaggle-clef/touche-2025-rad/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["touche_rad*"]
+namespaces = false
