@@ -1,0 +1,23 @@
+# baseline from other projects
+numpy
+pandas
+matplotlib
+scikit-learn
+tqdm
+pyspark >= 3.4.0
+pyarrow
+luigi
+python-dotenv
+
+# touche specific
+pyyaml
+openai
+chromadb
+streamlit
+
+# developer tools
+jupyterlab
+ruff
+pre-commit
+pytest
+duckdb
