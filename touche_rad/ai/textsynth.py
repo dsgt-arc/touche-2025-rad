@@ -20,7 +20,7 @@ class TextSynthEngine(ChatModelEnum):
 
     @classmethod
     def default_model(cls) -> "TextSynthEngine":
-        return cls.LLAMA3_3_70B_INSTRUCT
+        return cls.MISTRAL_7B
 
     @classmethod
     def chat_models(cls) -> List["TextSynthEngine"]:
