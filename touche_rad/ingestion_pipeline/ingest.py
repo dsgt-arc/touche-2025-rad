@@ -1,12 +1,10 @@
 ### Main ingestion pipeline for debate arguments
 
 import pandas as pd
-import chromadb
 import uuid
 from typing import Optional, List
-from pathlib import Path
 import numpy as np
-from tqdm import tqdm
+from sqlalchemy import create_engine, text
 
 from .preprocessing import TextPreprocessor
 from .embeddings import ArgumentEmbedder
@@ -15,8 +13,7 @@ from .embeddings import ArgumentEmbedder
 class DebateIngestionPipeline:
     def __init__(
         self,
-        chroma_path: str = "../embedded_data",
-        collection_name: str = "debate_arguments",
+        db_url: str = "postgresql://aaryanpotdar:password@localhost:5432/postgres",
         embedding_model: Optional[str] = None,
         max_tokens: int = 384,
         chunk_size: Optional[int] = None,
@@ -24,21 +21,26 @@ class DebateIngestionPipeline:
         """Initialize the ingestion pipeline.
 
         Args:
-            chroma_path: Path to ChromaDB storage
-            collection_name: Name of the collection to store arguments
+            db_url: Database URL for PostgreSQL
             embedding_model: Name of the sentence-transformers model to use
             max_tokens: Maximum number of tokens allowed per text
             chunk_size: If provided, combine this many sentences into chunks
         """
-        # Create directory if it doesn't exist
-        Path(chroma_path).mkdir(parents=True, exist_ok=True)
-
-        self.client = chromadb.PersistentClient(path=chroma_path)
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name,
-            metadata={"description": "Debate arguments and their embeddings"},
-        )
-
+        self.engine = create_engine(db_url)
+        with self.engine.connect() as connection:
+            connection.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS embeddings (
+                            id UUID PRIMARY KEY,
+                            embedding FLOAT8[],
+                            text TEXT,
+                            topic_id TEXT,
+                            topic TEXT,
+                            num_sentences INTEGER,
+                            is_chunk BOOLEAN
+                );
+    """)
+            )
         self.embedder = (
             ArgumentEmbedder(embedding_model) if embedding_model else ArgumentEmbedder()
         )
@@ -77,69 +79,37 @@ class DebateIngestionPipeline:
 
         return total_stats
 
-    def save_embeddings_to_parquet(
+    def save_embeddings_to_postgres(
         self,
         embeddings: np.ndarray,
         chunks: List[str],
         topic_id: str,
         topic: str,
-        output_dir: str = "../embedded_data",
     ):
-        """Save embeddings and metadata to parquet file.
+        """Save embeddings and metadata to PostgreSQL.
 
         Args:
             embeddings: Numpy array of embeddings
             chunks: List of text chunks
             topic_id: ID of the topic
             topic: Topic name
-            output_dir: Directory to save parquet files
         """
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-        # Create DataFrame with embeddings and metadata
+        # Create a DataFrame with embeddings and metadata
         df = pd.DataFrame(
             {
                 "id": [str(uuid.uuid4()) for _ in chunks],
-                "embedding": list(embeddings),
+                "embedding": [embedding.tolist() for embedding in embeddings],
                 "text": chunks,
                 "topic_id": str(topic_id),
                 "topic": topic,
                 "num_sentences": [len(chunk.split(".")) for chunk in chunks],
+                "is_chunk": [True] * len(chunks),  # Assuming all are chunks
             }
         )
 
-        # Save to parquet
-        output_path = Path(output_dir) / f"embeddings_topic_{topic_id}.parquet"
-        df.to_parquet(output_path)
-        print(f"Saved embeddings for topic {topic_id} to {output_path}")
-
-    def load_embeddings_to_chroma(self, parquet_dir: str):
-        """Load embeddings from parquet files into ChromaDB.
-
-        Args:
-            parquet_dir: Directory containing parquet files
-        """
-        parquet_files = list(Path(parquet_dir).glob("*.parquet"))
-        print(f"Found {len(parquet_files)} parquet files")
-
-        for parquet_path in tqdm(parquet_files, desc="Loading embeddings"):
-            df = pd.read_parquet(parquet_path)
-
-            self.collection.add(
-                documents=df["text"].tolist(),
-                embeddings=np.stack(df["embedding"].to_numpy()),
-                ids=df["id"].tolist(),
-                metadatas=[
-                    {
-                        "topic_id": row["topic_id"],
-                        "topic": row["topic"],
-                        "is_chunk": True,
-                        "num_sentences": row["num_sentences"],
-                    }
-                    for _, row in df.iterrows()
-                ],
-            )
-            print(f"Loaded {len(df)} embeddings from {parquet_path.name}")
+        # Save to PostgreSQL
+        df.to_sql("embeddings", con=self.engine, if_exists="append", index=False)
+        print(f"Saved {len(chunks)} embeddings for topic {topic_id} to PostgreSQL.")
 
     def ingest_csv(
         self,
@@ -179,10 +149,10 @@ class DebateIngestionPipeline:
             if not skip_stats:
                 print(f"Created {len(chunks)} chunks for topic {topic_id}")
 
-            # Generate embeddings and save to parquet
+            # Generate embeddings and save to PostgreSQL
             if not analyze_only:
                 embeddings = self.embedder.embed_texts(chunks, debug=debug)
-                self.save_embeddings_to_parquet(
+                self.save_embeddings_to_postgres(
                     embeddings=embeddings,
                     chunks=chunks,
                     topic_id=str(topic_id),
