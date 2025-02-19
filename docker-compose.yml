@@ -10,6 +10,7 @@ services:
       - TEXTSYNTH_API_KEY
       - OPENAI_API_KEY
       - STREAMLIT_SERVER_ADDRESS
+      - TENSORZERO_GATEWAY_URL
 
   # This will only get run in a production profile.
   #   docker compose --profile prod up
