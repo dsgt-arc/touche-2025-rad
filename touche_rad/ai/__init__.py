@@ -1,12 +1,12 @@
 from .base import Message, ChatClient
-from .openai import OpenAIClient, OpenAIModel
+from .tensorzero import TensorZeroClient, TensorZeroModel
 from .textsynth import TextSynthClient, TextSynthEngine
 
 __all__ = [
     "Message",
     "ChatClient",
-    "OpenAIClient",
-    "OpenAIModel",
+    "TensorZeroClient",
+    "TensorZeroModel",
     "TextSynthClient",
     "TextSynthEngine",
 ]
