@@ -19,6 +19,7 @@ class TensorZeroModel(ChatModelEnum):
 
     # tensorzero functions
     CHAT_COMPLETION = "tensorzero::function_name::chat_completion"
+    SUMMARIZE_DATA = "tensorzero::function_name::summarize_data"
 
     @classmethod
     def default_model(cls) -> "TensorZeroModel":
