@@ -14,12 +14,8 @@ class TensorZeroModel(ChatModelEnum):
     GPT4_O_LATEST = "openai::chatgpt-4o-latest"
     GPT4_O_MINI = "openai::gpt-4o-mini"
 
-    # anthropic models (just adding as an example)
-    SONNET3_5 = "anthropic::claude-3-5-sonnet-latest"
-
     # tensorzero functions
-    CHAT_COMPLETION = "tensorzero::function_name::chat_completion"
-    SUMMARIZE_DATA = "tensorzero::function_name::summarize_data"
+    SUMMARIZE_DATA = "summarize_data"
 
     @classmethod
     def default_model(cls) -> "TensorZeroModel":
@@ -40,15 +36,18 @@ class TensorZeroClient(ChatClient):
         model: TensorZeroModel = TensorZeroModel.default_model(),
     ):
         self._client = TensorZeroGateway(os.environ.get("TENSORZERO_GATEWAY_URL"))
+        # TODO: do we pull out model/fn from constructor and allow plugin of model or fn on `chat()`?
         self.model = model
 
     def chat(self, messages: List[Message]) -> str:
         with self._client as client:
             response: InferenceResponse = client.inference(
-                model_name=self.model,
+                # model_name=self.model,
+                function_name=TensorZeroModel.SUMMARIZE_DATA,
                 input={
                     "messages": [
-                        {"role": msg.role, "content": msg.content} for msg in messages
+                        {"role": msg.role, "content": {"text": msg.content}}
+                        for msg in messages
                     ]
                 },
             )
