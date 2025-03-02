@@ -162,3 +162,9 @@ cython_debug/
 #.idea/
 
 *.out
+embedded_data/
+chroma_db/
+.DS_Store
+
+# Data files
+*.parquet

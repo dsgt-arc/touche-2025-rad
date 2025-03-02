@@ -1,4 +1,4 @@
-"""Streamlit entry point for the Touch 2025 RAD demo."""
+# app.py
 
 import streamlit as st
 from touche_rad.ai import TensorZeroClient, TensorZeroModel
