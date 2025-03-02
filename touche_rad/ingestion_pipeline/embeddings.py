@@ -5,6 +5,9 @@ from sentence_transformers import SentenceTransformer
 from typing import List
 import numpy as np
 from tqdm import tqdm
+from sqlalchemy import create_engine, text
+
+from scipy.spatial.distance import cosine
 
 
 def get_device() -> str:
@@ -71,3 +74,64 @@ class ArgumentEmbedder:
                 embeddings.append(batch_embeddings)
                 pbar.update(len(batch))
         return np.vstack(embeddings)
+
+    def embed(self, text: str) -> np.ndarray:
+        """Generate embeddings for a single text input."""
+        return self.embed_texts([text])
+
+
+def embed_text(input_text):
+    embedder = ArgumentEmbedder()
+    return embedder.embed(input_text)
+
+
+def search_similar_embeddings(embedded_input: np.ndarray):
+    # Flatten the NumPy array to a list for the SQL query
+    embedded_input = embedded_input.flatten()
+    # print(embedded_input)
+
+    # Create engine
+    db_url = "postgresql://aaryanpotdar:password@localhost:5432/postgres"
+    engine = create_engine(db_url)
+
+    try:
+        with engine.connect() as connection:
+            # Fetch all embeddings and texts from the database
+            result_set = connection.execute(
+                text("""
+                SELECT text, embedding
+                FROM embeddings
+                """)
+            ).fetchall()
+
+            # Compute cosine similarity
+            max_similarity = float("-inf")
+            most_similar_sent = None
+
+            for row in result_set:
+                sent, embedding = row
+                # print(embedding)
+                # print(type(embedding))
+                e_list = embedding.strip("{}").split(",")
+
+                # Convert the list of strings to a list of floats
+                e_vector = [float(x) for x in e_list]
+                # Ensure the embedding is a 1-D NumPy array
+                embedding_array = np.array(
+                    e_vector, dtype=np.float32
+                ).flatten()  # Ensure it's 1-D
+
+                # Compute cosine similarity
+                similarity = 1 - cosine(embedded_input, embedding_array)
+
+                if similarity > max_similarity:
+                    max_similarity = similarity
+                    most_similar_sent = sent
+            # print(type(sent))
+            # print(sent)
+
+    except Exception as e:
+        print(f"An error occurred during the database operation: {e}")
+        return None
+
+    return most_similar_sent if most_similar_sent else None
