@@ -42,12 +42,10 @@ class TensorZeroClient(ChatClient):
     def chat(self, messages: List[Message]) -> str:
         with self._client as client:
             response: InferenceResponse = client.inference(
-                # model_name=self.model,
-                function_name=TensorZeroModel.SUMMARIZE_DATA,
+                model_name=self.model,
                 input={
                     "messages": [
-                        {"role": msg.role, "content": {"text": msg.content}}
-                        for msg in messages
+                        {"role": msg.role, "content": msg.content} for msg in messages
                     ]
                 },
             )
