@@ -1,0 +1,8 @@
+[functions.summarize_data]
+type = "chat"
+user_schema = "functions/schemas/summarize_data_schema.json"
+
+[functions.summarize_data.variants.gpt_4o_mini]
+type = "chat_completion"
+model = "openai::gpt-4o-mini"
+user_template = "functions/templates/summarize_data_template.minijinja"

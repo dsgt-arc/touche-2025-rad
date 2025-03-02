@@ -10,6 +10,7 @@ services:
       - TEXTSYNTH_API_KEY
       - OPENAI_API_KEY
       - STREAMLIT_SERVER_ADDRESS
+      - TENSORZERO_GATEWAY_URL
 
   # This will only get run in a production profile.
   #   docker compose --profile prod up
@@ -34,3 +35,45 @@ services:
       - OAUTH2_PROXY_CLIENT_SECRET
       - OAUTH2_PROXY_COOKIE_SECRET
       - DOMAIN_NAME
+
+  # tensorzero demo setup stuff
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    environment:
+      - CLICKHOUSE_USER
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
+      - CLICKHOUSE_PASSWORD
+    ports:
+      - "8123:8123"
+    healthcheck:
+      test: wget --spider --tries 1 http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123/ping
+      start_period: 30s
+      start_interval: 1s
+      timeout: 1s
+
+  gateway:
+    image: tensorzero/gateway
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      - TENSORZERO_CLICKHOUSE_URL
+      - OPENAI_API_KEY
+    ports:
+      - "3000:3000"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  ui:
+    image: tensorzero/ui
+    volumes:
+      - ./config:/app/config:ro
+    environment:
+      - OPENAI_API_KEY
+      - TENSORZERO_CLICKHOUSE_URL
+      - TENSORZERO_GATEWAY_URL
+    ports:
+      - "4000:4000"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
