@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class DebateContext:
+class DebateContext(object):
     """The debate context"""
 
     def __init__(
@@ -35,7 +35,7 @@ class DebateContext:
         return str(uuid.uuid4())
 
 
-class DebateManager:
+class DebateManager(object):
     def __init__(
         self,
         strategy_engine=None,

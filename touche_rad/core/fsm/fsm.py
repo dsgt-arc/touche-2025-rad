@@ -16,7 +16,6 @@ class DebateStateMachine(Machine):
             states = config["states"]
             transitions = config["transitions"]
         except (FileNotFoundError, ValueError) as e:
-            logger.error(f"Error loading FSM configuration: {e}")
             raise e
 
         super().__init__(
@@ -26,10 +25,6 @@ class DebateStateMachine(Machine):
             initial="awaiting_user_claim",
             auto_transitions=False,
             **kwargs,
-        )
-
-        logger.info(
-            f"Debate state machine initialized with {len(states)} states and {len(transitions)} transitions"
         )
 
     def load_fsm_config(self, config_file: str) -> Dict[str, Any]:
