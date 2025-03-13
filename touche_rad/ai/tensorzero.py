@@ -41,6 +41,7 @@ class TensorZeroClient(ChatClient):
 
     def chat(self, messages: List[Message]) -> str:
         with self._client as client:
+            print(messages)
             response: InferenceResponse = client.inference(
                 model_name=self.model,
                 input={

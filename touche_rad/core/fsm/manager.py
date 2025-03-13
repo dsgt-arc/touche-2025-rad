@@ -43,7 +43,7 @@ class DebateManager:
     ):
         self.strategy_engine = strategy_engine
         self.context = DebateContext()
-        self.machine = DebateStateMachine(self.context, config_file=config_file)
+        self.machine = DebateStateMachine(model=self.context, config_file=config_file)
 
     # ----------------#
     #     Getters     #
@@ -58,7 +58,12 @@ class DebateManager:
     # ------------------#
     def handle_user_message(self, message: str) -> str:
         """Main entry point for handling a user message from streamlit app"""
-        pass
+        if self.context.state == "awaiting_user_claim":
+            self.context.receive_claim()
+        elif self.context.state == "processing_user_claim":
+            self.context.claim_processed()
+
+        return self.context.state
 
     # ------------------#
     #    Conditions     #

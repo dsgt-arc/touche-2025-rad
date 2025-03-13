@@ -16,5 +16,12 @@ debate_manager = DebateManager(
     strategy_engine=strategy, config_file="config/transitions.json"
 )
 
+# debate_manager.context.receive_claim()
+
+
+def send_utterance(msg: str) -> str:
+    return debate_manager.handle_user_message(msg)
+
+
 ai_client = TensorZeroClient(model=TensorZeroModel.GPT4_O_MINI)
-Chat(chat_client=ai_client).render()
+Chat(chat_client=ai_client, msg_callback=send_utterance).render()
