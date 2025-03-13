@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from .fsm import DebateStateMachine
+from touche_rad.core.fsm.fsm import DebateStateMachine
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,7 +10,7 @@ class DebateContext:
 
     def __init__(
         self,
-        user_claim: str,
+        user_claim: str = None,
         user_utterances: List[Any] = None,
         system_utterances: List[Any] = None,
         current_turn: int = 0,
@@ -28,7 +28,7 @@ class DebateContext:
         self.conclusion_requested = conclusion_requested
         self.state = None  # attached when passed into the DebateStateMachine
 
-    def _generate_debate_id(self):
+    def _generate_id(self):
         """Generate a unique ID for this debate."""
         import uuid
 

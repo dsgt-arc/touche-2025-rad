@@ -12,7 +12,9 @@ This a demo of the Retrieval Augmented Dabate (RAD) system build by DS@GT CLEF T
 """)
 
 strategy = StrategyEngine()
-debate_manager = DebateManager(strategy_engine=strategy)
+debate_manager = DebateManager(
+    strategy_engine=strategy, config_file="config/transitions.json"
+)
 
 ai_client = TensorZeroClient(model=TensorZeroModel.GPT4_O_MINI)
 Chat(chat_client=ai_client).render()

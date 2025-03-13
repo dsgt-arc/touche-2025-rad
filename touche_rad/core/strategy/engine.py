@@ -1,5 +1,5 @@
 import random
-from model.response import SystemResponseType
+from touche_rad.core.model.response import SystemResponseType
 
 
 class StrategyEngine:
