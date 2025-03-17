@@ -1,6 +1,4 @@
-import json
 from transitions import Machine
-from typing import Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,32 +7,72 @@ logger = logging.getLogger(__name__)
 class DebateStateMachine(Machine):
     """The Debate FSM"""
 
-    def __init__(self, model, config_file="transitions.json", **kwargs):
-        """Initialize the debate state machine"""
-        try:
-            config = self.load_fsm_config(config_file)
-            states = config["states"]
-            transitions = config["transitions"]
-        except (FileNotFoundError, ValueError) as e:
-            raise e
+    states = [
+        "awaiting_user_claim",
+        "processing_user_claim",
+        "retrieving_response_data",
+        "generating_system_response",
+        "validating_debate",
+        "suggesting_conclusion",
+        "sending_system_response",
+        "awaiting_user_response",
+    ]
 
+    def __init__(self, model, **kwargs):
+        """Initialize the debate state machine"""
         super().__init__(
             model=model,
-            states=states,
-            transitions=transitions,
+            states=DebateStateMachine.states,
             initial="awaiting_user_claim",
             auto_transitions=False,
             **kwargs,
         )
 
-    def load_fsm_config(self, config_file: str) -> Dict[str, Any]:
-        """Load and validate FSM configuration from a JSON file."""
-        with open(config_file, "r") as f:
-            config = json.load(f)
+        self.add_transition(
+            "receive_claim", "awaiting_user_claim", "processing_user_claim"
+        )
+        self.add_transition(
+            "claim_processed", "processing_user_claim", "retrieving_response_data"
+        )
+        self.add_transition(
+            "data_retrieved", "retrieving_response_data", "generating_system_response"
+        )
+        self.add_transition(
+            "response_generated", "generating_system_response", "validating_debate"
+        )
 
-        if "states" not in config:
-            raise ValueError("FSM configuration missing 'states' field")
-        if "transitions" not in config:
-            raise ValueError("FSM configuration missing 'transitions' field")
+        self.add_transition(
+            "should_continue",
+            "validating_debate",
+            "sending_system_response",
+            conditions=["debate_should_continue"],
+        )
 
-        return config
+        self.add_transition(
+            "should_conclude",
+            "validating_debate",
+            "suggesting_conclusion",
+            conditions=["debate_should_conclude"],
+        )
+
+        self.add_transition(
+            "user_approves_to_conclude", "suggesting_conclusion", "awaiting_user_claim"
+        )
+        self.add_transition(
+            "user_reject_to_conclude",
+            "suggesting_conclusion",
+            "sending_system_response",
+        )
+        self.add_transition(
+            "system_response_sent", "sending_system_response", "awaiting_user_response"
+        )
+        self.add_transition(
+            "receive_response", "awaiting_user_response", "processing_user_claim"
+        )
+
+        self.add_transition(
+            "start_new_debate",
+            "awaiting_user_response",
+            "awaiting_user_claim",
+            conditions=["user_requests_new_topic"],
+        )

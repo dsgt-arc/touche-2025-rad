@@ -34,16 +34,28 @@ class DebateContext(object):
 
         return str(uuid.uuid4())
 
+    # Define methods needed for FSM conditions
+    def debate_should_continue(self):
+        """Check if the debate should continue."""
+        return self.current_turn < self.max_turns and not self.conclusion_requested
+
+    def debate_should_conclude(self):
+        """Check if the debate should conclude."""
+        return self.current_turn >= self.max_turns or self.conclusion_requested
+
+    def user_requests_new_topic(self):
+        """Check if user has requested a new topic."""
+        raise NotImplementedError("not implemented")
+
 
 class DebateManager(object):
     def __init__(
         self,
         strategy_engine=None,
-        config_file="transitions.json",
     ):
         self.strategy_engine = strategy_engine
         self.context = DebateContext()
-        self.machine = DebateStateMachine(model=self.context, config_file=config_file)
+        self.machine = DebateStateMachine(model=self.context)
 
     # ----------------#
     #     Getters     #
@@ -51,7 +63,7 @@ class DebateManager(object):
 
     def get_debate_state(self) -> Dict[str, Any]:
         """Get the current state of the debate."""
-        return {"state": self.state, "context": self.context}
+        return {"state": self.context.state, "context": self.context}
 
     # ------------------#
     #    Entrypoint     #
