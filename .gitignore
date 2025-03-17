@@ -168,3 +168,4 @@ chroma_db/
 
 # Data files
 *.parquet
+*.png
