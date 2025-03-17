@@ -1,14 +1,11 @@
-from typing import Any, List
-
-
 class DebateContext(object):
     """The debate context"""
 
     def __init__(
         self,
         user_claim: str = None,
-        user_utterances: List[Any] = None,
-        system_utterances: List[Any] = None,
+        user_utterances: list[str] = None,
+        system_utterances: list[str] = None,
         current_turn: int = 0,
         max_turns: int = 20,
         conclusion_requested: bool = False,
@@ -22,6 +19,17 @@ class DebateContext(object):
         self.current_turn = current_turn
         self.max_turns = max_turns
         self.conclusion_requested = conclusion_requested
+        self.last_user_message: str | None = None
+
+    def reset_debate(self):
+        """Reset the debate context to its initial state."""
+        self.user_claim = None
+        self.user_utterances = []
+        self.system_utterances = []
+        self.current_turn = 0
+        self.conclusion_requested = False
+        self.last_user_message = None
+        self.debate_id = self._generate_id()
 
     def _generate_id(self):
         """Generate a unique ID for this debate."""
@@ -29,7 +37,6 @@ class DebateContext(object):
 
         return str(uuid.uuid4())
 
-    # Define methods needed for FSM conditions
     def should_continue(self):
         """Check if the debate should continue."""
         return self.current_turn < self.max_turns and not self.conclusion_requested
@@ -39,5 +46,13 @@ class DebateContext(object):
         return self.current_turn >= self.max_turns or self.conclusion_requested
 
     def user_requests_new_topic(self):
-        """Check if user has requested a new topic."""
-        raise NotImplementedError("not implemented")
+        """Check if user has requested a new topic.  Simplified for demonstration."""
+        return self.last_user_message and self.last_user_message.lower() == "new topic"
+
+    def add_user_utterance(self, utterance: str):
+        self.user_utterances.append(utterance)
+        self.current_turn += 1
+        self.last_user_message = utterance
+
+    def add_system_utterance(self, utterance: str):
+        self.system_utterances.append(utterance)

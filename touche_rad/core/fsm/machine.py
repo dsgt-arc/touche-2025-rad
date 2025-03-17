@@ -1,92 +1,64 @@
 from transitions import Machine
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class DebateMachine(Machine):
     """The Debate FSM"""
 
-    states = [
-        "awaiting_user_claim",
-        "processing_user_claim",
-        "retrieving_response_data",
-        "generating_system_response",
-        "validating_debate",
-        "suggesting_conclusion",
-        "sending_system_response",
-        "awaiting_user_response",
-    ]
+    states = ["user_turn", "system_turn", "conclusion"]
 
     transitions = [
         {
-            "trigger": "receive_claim",
-            "source": "awaiting_user_claim",
-            "dest": "processing_user_claim",
+            "trigger": "user_input",
+            "source": "user_turn",
+            "dest": "system_turn",
+            "after": "add_user_utterance",
         },
         {
-            "trigger": "claim_processed",
-            "source": "processing_user_claim",
-            "dest": "retrieving_response_data",
+            "trigger": "system_response",
+            "source": "system_turn",
+            "dest": "user_turn",
+            "after": "add_system_utterance",
         },
         {
-            "trigger": "data_retrieved",
-            "source": "retrieving_response_data",
-            "dest": "generating_system_response",
-        },
-        {
-            "trigger": "response_generated",
-            "source": "generating_system_response",
-            "dest": "validating_debate",
-        },
-        {
-            "trigger": "should_continue",
-            "source": "validating_debate",
-            "dest": "sending_system_response",
-            "conditions": ["debate_should_continue"],
-        },
-        {
-            "trigger": "should_conclude",
-            "source": "validating_debate",
-            "dest": "suggesting_conclusion",
-            "conditions": ["debate_should_conclude"],
+            "trigger": "request_conclusion",
+            "source": "system_turn",
+            "dest": "conclusion",
+            "before": "set_conclusion_requested",
         },
         {
             "trigger": "user_approves_to_conclude",
-            "source": "suggesting_conclusion",
-            "dest": "awaiting_user_claim",
+            "source": "conclusion",
+            "dest": "user_turn",
+            "before": "reset_debate",
         },
         {
-            "trigger": "user_reject_to_conclude",
-            "source": "suggesting_conclusion",
-            "dest": "sending_system_response",
-        },
-        {
-            "trigger": "system_response_sent",
-            "source": "sending_system_response",
-            "dest": "awaiting_user_response",
-        },
-        {
-            "trigger": "receive_response",
-            "source": "awaiting_user_response",
-            "dest": "processing_user_claim",
+            "trigger": "user_rejects_to_conclude",
+            "source": "conclusion",
+            "dest": "system_turn",
         },
         {
             "trigger": "start_new_debate",
-            "source": "awaiting_user_response",
-            "dest": "awaiting_user_claim",
-            "conditions": ["user_requests_new_topic"],
+            "source": "user_turn",
+            "dest": "user_turn",
+            "conditions": "user_requests_new_topic",
+            "before": "reset_debate",
         },
     ]
 
-    initial = "awaiting_user_claim"
+    initial = "user_turn"
 
-    def __init__(self, **kwargs):
-        """Initialize the debate state machine"""
+    def __init__(self, model, **kwargs):
         super().__init__(
-            states=self.states,
-            transitions=self.transitions,
-            initial=self.initial,
+            model=model,
+            states=DebateMachine.states,
+            transitions=DebateMachine.transitions,
+            initial=DebateMachine.initial,
             auto_transitions=False,
             **kwargs,
         )
+
+    def set_conclusion_requested(self):
+        self.model.conclusion_requested = True
+
+    def reset_debate(self):
+        self.model.reset_debate()
