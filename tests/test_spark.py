@@ -1,2 +1,5 @@
-def test_get_spark(spark):
-    assert spark is not None
+from touche_rad.spark import get_spark
+
+
+def test_get_spark():
+    assert get_spark() is not None
