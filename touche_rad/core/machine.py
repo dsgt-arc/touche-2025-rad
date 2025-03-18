@@ -23,7 +23,6 @@ class DebateMachine(Machine):
             "trigger": "request_conclusion",
             "source": "system_turn",
             "dest": "conclusion",
-            "before": "set_conclusion_requested",
         },
         {
             "trigger": "user_approves_to_conclude",
@@ -38,10 +37,9 @@ class DebateMachine(Machine):
         },
         {
             "trigger": "start_new_debate",
-            "source": "user_turn",
+            "source": "system_turn",
             "dest": "user_turn",
-            "conditions": "user_requests_new_topic",
-            "before": "reset_debate",
+            "after": "reset_debate",
         },
     ]
 
@@ -56,9 +54,3 @@ class DebateMachine(Machine):
             auto_transitions=False,
             **kwargs,
         )
-
-    def set_conclusion_requested(self):
-        self.model.conclusion_requested = True
-
-    def reset_debate(self):
-        self.model.reset_debate()

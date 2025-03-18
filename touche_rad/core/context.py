@@ -3,32 +3,38 @@ class DebateContext(object):
 
     def __init__(
         self,
-        user_claim: str = None,
         user_utterances: list[str] = None,
         system_utterances: list[str] = None,
         current_turn: int = 0,
-        max_turns: int = 20,
+        max_turns: int = 5,
         conclusion_requested: bool = False,
         debate_id: str = None,
     ):
-        # TODO: add methods to modify the contents of the context
         self.debate_id = debate_id or self._generate_id()
-        self.user_claim = user_claim
         self.user_utterances = user_utterances or []
         self.system_utterances = system_utterances or []
         self.current_turn = current_turn
         self.max_turns = max_turns
         self.conclusion_requested = conclusion_requested
-        self.last_user_message: str | None = None
+
+    @property
+    def user_claim(self) -> str | None:
+        if not self.user_utterances:
+            return None
+        return self.user_utterances[0]
+
+    @property
+    def last_user_message(self) -> str | None:
+        if not self.user_utterances:
+            return None
+        return self.user_utterances[-1]
 
     def reset_debate(self):
         """Reset the debate context to its initial state."""
-        self.user_claim = None
         self.user_utterances = []
         self.system_utterances = []
         self.current_turn = 0
         self.conclusion_requested = False
-        self.last_user_message = None
         self.debate_id = self._generate_id()
 
     def _generate_id(self):
@@ -37,22 +43,21 @@ class DebateContext(object):
 
         return str(uuid.uuid4())
 
-    def should_continue(self):
-        """Check if the debate should continue."""
-        return self.current_turn < self.max_turns and not self.conclusion_requested
-
     def should_conclude(self):
         """Check if the debate should conclude."""
-        return self.current_turn >= self.max_turns or self.conclusion_requested
+        return self.conclusion_requested or self.current_turn >= self.max_turns
 
     def user_requests_new_topic(self):
-        """Check if user has requested a new topic.  Simplified for demonstration."""
-        return self.last_user_message and self.last_user_message.lower() == "new topic"
+        """Check if user has requested a new topic."""
+        if not self.last_user_message:
+            return False
+        return self.last_user_message.lower() == "new topic"
 
     def add_user_utterance(self, utterance: str):
         self.user_utterances.append(utterance)
         self.current_turn += 1
-        self.last_user_message = utterance
+        if self.current_turn >= self.max_turns:
+            self.conclusion_requested = True
 
     def add_system_utterance(self, utterance: str):
         self.system_utterances.append(utterance)

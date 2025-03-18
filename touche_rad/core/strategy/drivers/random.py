@@ -28,9 +28,7 @@ class RandomStrategy(BaseStrategy):
             return SystemResponseType.DEFEND
 
     def generate_response(self, context: DebateContext) -> str:
-        user_utterance = context.last_user_message
-        response_type = self.get_response_type(user_utterance, context)
-        if response_type == SystemResponseType.ATTACK:
+        if self.get_response_type(context) == SystemResponseType.ATTACK:
             return random.choice(self.attack_responses)
         else:
             return random.choice(self.defend_responses)
