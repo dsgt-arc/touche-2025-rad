@@ -1,4 +1,4 @@
-from touche_rad.core.fsm import DebateContext, DebateMachine
+from touche_rad.core import DebateContext, DebateMachine
 from transitions.extensions import GraphMachine
 
 
