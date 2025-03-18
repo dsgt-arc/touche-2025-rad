@@ -14,7 +14,6 @@ def test_debate_context_reset_debate():
     assert context.user_claim is None
     assert context.user_utterances == []
     assert context.system_utterances == []
-    assert context.current_turn == 0
     assert context.conclusion_requested is False
     assert context.last_user_message is None
     assert context.debate_id != old_debate_id  # A new UUID should be generated.

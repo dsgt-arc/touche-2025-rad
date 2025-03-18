@@ -16,7 +16,7 @@ class DebateManager(object):
             if self.context.user_requests_new_topic():
                 self.context.start_new_debate()
                 return "Okay, let's start a new debate. What's your claim?"
-            elif self.context.should_conclude():
+            if self.context.should_conclude():
                 self.context.request_conclusion()
                 return "I think we've reached a good point to conclude. Do you agree?"
         elif self.context.is_conclusion():

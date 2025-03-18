@@ -28,7 +28,7 @@ class DebateMachine(Machine):
             "trigger": "user_approves_to_conclude",
             "source": "conclusion",
             "dest": "user_turn",
-            "before": "reset_debate",
+            "after": "reset_debate",
         },
         {
             "trigger": "user_rejects_to_conclude",

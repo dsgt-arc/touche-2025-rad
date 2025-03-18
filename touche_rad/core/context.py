@@ -6,7 +6,7 @@ class DebateContext(object):
         user_utterances: list[str] = None,
         system_utterances: list[str] = None,
         current_turn: int = 0,
-        max_turns: int = 5,
+        max_turns: int = 3,
         conclusion_requested: bool = False,
         debate_id: str = None,
     ):
@@ -55,7 +55,7 @@ class DebateContext(object):
 
     def add_user_utterance(self, utterance: str):
         self.user_utterances.append(utterance)
-        self.current_turn += 1
+        self.current_turn = self.current_turn + 1
         if self.current_turn >= self.max_turns:
             self.conclusion_requested = True
 
