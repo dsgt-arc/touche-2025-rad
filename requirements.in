@@ -13,8 +13,12 @@ python-dotenv
 pyyaml
 openai
 chromadb
+sentence_transformers
+sqlalchemy
 streamlit
 tensorzero
+torch
+transitions[diagrams]
 
 # developer tools
 jupyterlab
