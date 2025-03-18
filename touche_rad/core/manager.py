@@ -1,6 +1,6 @@
 from .context import DebateContext
 from .machine import DebateMachine
-from touche_rad.core.strategy import create_strategy
+from .strategy import create_strategy
 
 
 class DebateManager(object):

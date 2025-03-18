@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from touche_rad.core.fsm import DebateContext
+from touche_rad.core.context import DebateContext
 
 
 class SystemResponseType(Enum):

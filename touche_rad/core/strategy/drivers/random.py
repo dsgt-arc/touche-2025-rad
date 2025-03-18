@@ -1,6 +1,6 @@
 import random
 from .base import BaseStrategy, SystemResponseType
-from touche_rad.core.fsm import DebateContext
+from touche_rad.core.context import DebateContext
 
 
 class RandomStrategy(BaseStrategy):
