@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List
 
 
-class ChatModelEnum(str, Enum):
+class ChatResourceEnum(str, Enum):
     """
     Base API chat model enum for listing available models and providing a
     default model
@@ -12,7 +12,7 @@ class ChatModelEnum(str, Enum):
 
     @classmethod
     @abstractmethod
-    def chat_models(cls) -> List["ChatModelEnum"]:
+    def chat_models(cls) -> List["ChatResourceEnum"]:
         """
         Return the list of models that are supported for chat from specified client
         """
@@ -20,7 +20,7 @@ class ChatModelEnum(str, Enum):
 
     @classmethod
     @abstractmethod
-    def default_model(cls) -> "ChatModelEnum":
+    def default_model(cls) -> "ChatResourceEnum":
         """
         Return the defined default model
         """
