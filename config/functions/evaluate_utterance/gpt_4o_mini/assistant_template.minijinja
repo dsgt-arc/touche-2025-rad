@@ -1,0 +1,11 @@
+Quantity:
+Score: {{ quantity_score }}
+
+Quality:
+Score: {{ quality_score }}
+
+Relation:
+Score: {{ relation_score }}
+
+Manner:
+Score: {{ manner_score }}

@@ -1,0 +1,19 @@
+Evaluate the following debate utterance according to the rubric: Quantity, Quality, Relation, and Manner. Provide a score (1 or 0, 1 being sufficient, 0 being insufficient).
+
+Argument: {{ argument }}
+Previous Message (Context): {{ previous_message }}
+Original User Claim: {{ claim }}
+
+Rubric Evaluation:
+
+Quantity:
+Score:
+
+Quality:
+Score:
+
+Relation:
+Score:
+
+Manner:
+Score:

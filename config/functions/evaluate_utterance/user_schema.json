@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "argument": {
+      "type": "string",
+      "description": "The debate argument to be evaluated."
+    },
+    "previous_message": {
+      "type": "string",
+      "description": "The immediately preceding message to which the argument is a response."
+    },
+    "claim": {
+      "type": "string",
+      "description": "The original claim that the argument is responding to."
+    }
+  },
+  "required": ["argument", "previous_message", "claim"],
+  "additionalProperties": false
+}
