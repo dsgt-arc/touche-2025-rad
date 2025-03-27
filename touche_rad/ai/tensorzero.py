@@ -15,7 +15,7 @@ class TensorZeroModel(ChatModelEnum):
     GPT4_O_MINI = "openai::gpt-4o-mini"
 
     # tensorzero functions
-    SUMMARIZE_DATA = "summarize_data"
+    EVALUATE_UTTERANCE = "evaluate_utterance"
 
     @classmethod
     def default_model(cls) -> "TensorZeroModel":
