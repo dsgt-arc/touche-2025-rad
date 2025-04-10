@@ -1,17 +1,12 @@
 import os
-from typing import Any, Dict, List, Union
-from .base import ChatClient, ChatResourceEnum, Message
-from tensorzero import TensorZeroGateway, InferenceResponse
+import json
+from typing import Generator
+from .base import ChatResourceEnum, EvaluationClient
+from tensorzero import InferenceChunk, TensorZeroGateway, InferenceResponse
 
 
 class TensorZeroChatResource(ChatResourceEnum):
     """Abstract base class for all TensorZero resources (models and functions)."""
-
-    def __init__(self, name: str):
-        self.name = name
-
-    def __str__(self):
-        return self.name
 
 
 class TensorZeroChatResourceModel(TensorZeroChatResource):
@@ -37,14 +32,10 @@ class TensorZeroChatResourceFunction(TensorZeroChatResource):
 
     @classmethod
     def default_model(cls) -> "TensorZeroChatResourceFunction":
-        return cls.GPT4_O_MINI
-
-    @classmethod
-    def chat_models(cls) -> List["TensorZeroChatResourceFunction"]:
-        return [cls.EVALUATE_UTTERANCE]
+        return cls.EVALUATE_UTTERANCE
 
 
-class TensorZeroClient(ChatClient):
+class TensorZeroClient(EvaluationClient):
     """
     TensorZeroClient - a provider agnostic client to interface with the tensorzero gateway inference engine
     """
@@ -54,45 +45,67 @@ class TensorZeroClient(ChatClient):
     ):
         self._client = TensorZeroGateway(os.environ.get("TENSORZERO_GATEWAY_URL"))
 
-    def chat(
+    def _inference(
         self,
-        messages: List[Message],
-        resource: Union[
-            TensorZeroChatResourceModel, TensorZeroChatResourceFunction
-        ] = None,
-    ):
-        """
-        Chats with the TensorZero gateway using the specified model or function.
-
-        Args:
-            messages: A list of messages to send to the model.
-            resource: Either a TensorZeroChatResourceModel or a
-                TensorZeroChatResourceFunction object.  If None, the default model is used.
-
-        Returns:
-            The response from the model.
-        """
-
-        with self._client as client:
-            input_data: Dict[str, Any] = {
+        fn: str,
+        role: str,
+        utterance: str,
+        prev: str,
+        user_claim: str,
+    ) -> InferenceResponse | Generator[InferenceChunk, None, None]:
+        return self._client.inference(
+            function_name=fn,
+            input={
                 "messages": [
-                    {"role": msg.role, "content": msg.content} for msg in messages
+                    {
+                        "role": role,
+                        "content": [
+                            {
+                                "type": "text",
+                                "arguments": {
+                                    "argument": utterance,
+                                    "previous_message": prev,
+                                    "claim": user_claim,
+                                },
+                            }
+                        ],
+                    }
                 ]
-            }
+            },
+        )
 
-            if resource is None:
-                resource = TensorZeroChatResourceModel.default_model()
+    def evaluate(self, ctx, role, utterance) -> dict[str, int]:
+        if role == "user":
+            previous_message = ctx.system_utterances[-1]
+        else:
+            previous_message = ctx.user_utterances[-1]
 
-            resource_name = resource.name
-            is_function = isinstance(resource, TensorZeroChatResourceFunction)
-
-            if is_function:
-                response: InferenceResponse = client.call_function(
-                    function_name=resource_name, input=input_data
+        try:
+            res = (
+                self._inference(
+                    TensorZeroChatResourceFunction.EVALUATE_UTTERANCE,
+                    role=role,
+                    utterance=utterance,
+                    prev=previous_message,
+                    user_claim=ctx.user_claim,
                 )
-            else:
-                response: InferenceResponse = client.inference(
-                    model_name=resource_name, input=input_data
-                )
+                .content[0]
+                .text
+            )
 
-            return response.content[0].text
+            try:
+                data = json.loads(res)
+                evaluation = [
+                    data.get("quantity_score"),
+                    data.get("quality_score"),
+                    data.get("relation_score"),
+                    data.get("manner_score"),
+                ]
+
+                return evaluation
+            except Exception:
+                pass  # for now
+
+        except Exception as e:
+            print(f"An error occurred during evaluation: {e}")
+            return f"An error occurred during evaluation: {e}"

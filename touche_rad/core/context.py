@@ -3,6 +3,7 @@ class DebateContext(object):
 
     def __init__(
         self,
+        client,
         user_utterances: list[str] = None,
         system_utterances: list[str] = None,
         current_turn: int = 0,
@@ -11,8 +12,11 @@ class DebateContext(object):
         debate_id: str = None,
     ):
         self.debate_id = debate_id or self._generate_id()
+        self.client = client
         self.user_utterances = user_utterances or []
         self.system_utterances = system_utterances or []
+        self.user_ratings = []
+        self.system_ratings = []
         self.current_turn = current_turn
         self.max_turns = max_turns
         self.conclusion_requested = conclusion_requested
@@ -33,6 +37,8 @@ class DebateContext(object):
         """Reset the debate context to its initial state."""
         self.user_utterances = []
         self.system_utterances = []
+        self.user_ratings = []
+        self.system_ratings = []
         self.current_turn = 0
         self.conclusion_requested = False
         self.debate_id = self._generate_id()
@@ -54,10 +60,20 @@ class DebateContext(object):
         return self.last_user_message.lower() == "new topic"
 
     def add_user_utterance(self, utterance: str):
+        self._evaluate_user_utterance(utterance=utterance)
         self.user_utterances.append(utterance)
         self.current_turn = self.current_turn + 1
         if self.current_turn >= self.max_turns:
             self.conclusion_requested = True
 
     def add_system_utterance(self, utterance: str):
+        self._evaluate_system_utterance(utterance=utterance)
         self.system_utterances.append(utterance)
+
+    def _evaluate_user_utterance(self, utterance: str):
+        score = self.client.evaluate(ctx=self, role="user", utterance=utterance)
+        self.user_ratings.append(score)
+
+    def _evaluate_system_utterance(self, utterance: str):
+        score = self.client.evaluate(ctx=self, role="system", utterance=utterance)
+        self.system_ratings.append(score)

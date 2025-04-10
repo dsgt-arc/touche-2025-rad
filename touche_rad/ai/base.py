@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
+from touche_rad.core.context import DebateContext
+
 
 class ChatResourceEnum(str, Enum):
     """
@@ -47,5 +49,18 @@ class ChatClient(ABC):
     def chat(self, messages: List[Message]) -> str:
         """
         Send chat messages and return the response
+        """
+        pass
+
+
+class EvaluationClient(ABC):
+    """
+    Base class to be used for utterance evaluations
+    """
+
+    @abstractmethod
+    def evaluate(self, ctx: DebateContext, role: str, utterance: str):
+        """
+        Evaluate an utterance based on the given context
         """
         pass
