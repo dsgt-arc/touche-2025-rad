@@ -53,12 +53,13 @@ class TensorZeroClient(EvaluationClient):
         prev: str,
         user_claim: str,
     ) -> InferenceResponse | Generator[InferenceChunk, None, None]:
+        payload_role = "assistant" if role == "system" else role
         return self._client.inference(
             function_name=fn,
             input={
                 "messages": [
                     {
-                        "role": role,
+                        "role": payload_role,
                         "content": [
                             {
                                 "type": "text",
@@ -76,9 +77,13 @@ class TensorZeroClient(EvaluationClient):
 
     def evaluate(self, ctx, role, utterance) -> dict[str, int]:
         if role == "user":
-            previous_message = ctx.system_utterances[-1]
+            previous_message = (
+                "" if len(ctx.system_utterances) == 0 else ctx.system_utterances[-1]
+            )
         else:
-            previous_message = ctx.user_utterances[-1]
+            previous_message = (
+                "" if len(ctx.user_utterances) == 0 else ctx.user_utterances[-1]
+            )
 
         try:
             res = (

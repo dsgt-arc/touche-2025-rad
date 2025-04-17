@@ -1,19 +1,40 @@
-Evaluate the following debate utterance according to the rubric: Quantity, Quality, Relation, and Manner. Provide a score (1 or 0, 1 being sufficient, 0 being insufficient).
+# Task Description
+Evaluate the provided argument based on Grice's Maxims (Quantity, Quality, Relation, Manner) in the context of the preceding message and the overall debate claim.
 
+# Input Data
 Argument: {{ argument }}
 Previous Message (Context): {{ previous_message }}
 Original User Claim: {{ claim }}
 
-Rubric Evaluation:
+# Evaluation Criteria & Scoring
+- Quantity: Is the argument as informative as required (not too much, not too little)? Score 1 if yes, 0 if no.
+- Quality: Is the argument truthful and evidence-based (or clearly opinion if appropriate)? Score 1 if yes, 0 if no.
+- Relation: Is the argument relevant to the previous message and the claim? Score 1 if yes, 0 if no.
+- Manner: Is the argument clear, brief, and orderly (not obscure or ambiguous)? Score 1 if yes, 0 if no.
 
-Quantity:
-Score:
+# Output Instructions (CRITICAL)
+Your response MUST be a single, valid, serializable JSON object.
+The JSON object MUST contain exactly four keys: "quantity_score", "quality_score", "relation_score", "manner_score".
+Each key's value MUST be an integer, either 0 or 1.
+Do NOT include any text, explanations, summaries, or markdown formatting (like ```json) before or after the JSON object. Just output the raw JSON.
 
-Quality:
-Score:
+# Examples of Expected Output Format:
+{
+  "quantity_score": 1,
+  "quality_score": 0,
+  "relation_score": 1,
+  "manner_score": 1
+}
+# Another example:
+{
+  "quantity_score": 0,
+  "quality_score": 1,
+  "relation_score": 0,
+  "manner_score": 1
+}
 
-Relation:
-Score:
 
-Manner:
-Score:
+# Final Instruction
+Based on the input data, evaluation criteria, and strict output instructions, generate ONLY the required JSON object now.
+
+Output JSON:
