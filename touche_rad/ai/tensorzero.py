@@ -1,6 +1,8 @@
 import os
 import json
-from typing import Generator
+from typing import Generator, List, Union
+
+from touche_rad.core.context import DebateContext
 from .base import ChatResourceEnum, EvaluationClient
 from tensorzero import InferenceChunk, TensorZeroGateway, InferenceResponse
 
@@ -75,31 +77,57 @@ class TensorZeroClient(EvaluationClient):
             },
         )
 
-    def evaluate(self, ctx, role, utterance) -> dict[str, int]:
+    def evaluate(
+        self, ctx: DebateContext, role: str, utterance: str
+    ) -> Union[List[Union[int, None]], str]:
+        """Evaluates an utterance, handling potential errors and None claim."""
         if role == "user":
             previous_message = (
                 "" if len(ctx.system_utterances) == 0 else ctx.system_utterances[-1]
             )
+            current_claim = ctx.user_claim
+            if current_claim is None:
+                current_claim = utterance
         else:
             previous_message = (
                 "" if len(ctx.user_utterances) == 0 else ctx.user_utterances[-1]
             )
+            current_claim = ctx.user_claim
+            if current_claim is None:
+                current_claim = ""
 
         try:
-            res = (
-                self._inference(
-                    TensorZeroChatResourceFunction.EVALUATE_UTTERANCE,
-                    role=role,
-                    utterance=utterance,
-                    prev=previous_message,
-                    user_claim=ctx.user_claim,
-                )
-                .content[0]
-                .text
+            res_obj = self._inference(
+                TensorZeroChatResourceFunction.EVALUATE_UTTERANCE,
+                role="user",
+                utterance=utterance,
+                prev=previous_message,
+                user_claim=current_claim,
             )
+
+            if isinstance(res_obj, InferenceResponse):
+                res = res_obj.content[0].text
+            else:
+                raise TypeError(
+                    f"Unexpected response type from inference: {type(res_obj)}"
+                )
 
             try:
                 data = json.loads(res)
+
+                if not all(
+                    k in data
+                    for k in [
+                        "quantity_score",
+                        "quality_score",
+                        "relation_score",
+                        "manner_score",
+                    ]
+                ):
+                    raise ValueError(
+                        f"Evaluation response missing required score fields. Received: {res}"
+                    )
+
                 evaluation = [
                     data.get("quantity_score"),
                     data.get("quality_score"),
@@ -107,10 +135,15 @@ class TensorZeroClient(EvaluationClient):
                     data.get("manner_score"),
                 ]
 
+                evaluation = [int(s) if s is not None else None for s in evaluation]
+
                 return evaluation
-            except Exception:
-                pass  # for now
+
+            except (json.JSONDecodeError, ValueError, KeyError, TypeError) as json_err:
+                error_msg = f"Error processing evaluation response: {json_err}. Raw response: '{res}'"
+                print(error_msg)
+                return f"An error occurred during evaluation: {error_msg}"
 
         except Exception as e:
-            print(f"An error occurred during evaluation: {e}")
-            return f"An error occurred during evaluation: {e}"
+            error_msg = f"An error occurred calling evaluation service: {e}"
+            return f"An error occurred during evaluation: {error_msg}"

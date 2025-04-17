@@ -60,15 +60,18 @@ class DebateContext(object):
         return self.last_user_message.lower() == "new topic"
 
     def add_user_utterance(self, utterance: str):
-        self._evaluate_user_utterance(utterance=utterance)
+        if self.user_claim is not None:
+            self._evaluate_user_utterance(utterance=utterance)
+
         self.user_utterances.append(utterance)
         self.current_turn = self.current_turn + 1
         if self.current_turn >= self.max_turns:
             self.conclusion_requested = True
 
     def add_system_utterance(self, utterance: str):
-        self._evaluate_system_utterance(utterance=utterance)
-        self.system_utterances.append(utterance)
+        if len(self.user_utterances) > 0:
+            self._evaluate_system_utterance(utterance=utterance)
+            self.system_utterances.append(utterance)
 
     def _evaluate_user_utterance(self, utterance: str):
         score = self.client.evaluate(ctx=self, role="user", utterance=utterance)
