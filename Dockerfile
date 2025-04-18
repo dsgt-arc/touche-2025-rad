@@ -1,7 +1,7 @@
 FROM python:3.12
 
 RUN apt-get -y update && \
-     apt-get -y install default-jre
+     apt-get -y install default-jre graphviz-dev
 
 WORKDIR /app
 ENV UV_SYSTEM_PYTHON=1
