@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class DebateContext(object):
     """The debate context"""
 
@@ -22,13 +25,13 @@ class DebateContext(object):
         self.conclusion_requested = conclusion_requested
 
     @property
-    def user_claim(self) -> str | None:
+    def user_claim(self) -> Optional[str]:
         if not self.user_utterances:
             return None
         return self.user_utterances[0]
 
     @property
-    def last_user_message(self) -> str | None:
+    def last_user_message(self) -> Optional[str]:
         if not self.user_utterances:
             return None
         return self.user_utterances[-1]

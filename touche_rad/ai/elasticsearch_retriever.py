@@ -4,26 +4,20 @@ from sentence_transformers import SentenceTransformer
 
 
 class ElasticsearchRetriever:
-    """
-    Retriever for arguments using dense retrieval from Elasticsearch.
-    3 search types: text similarity, support, and attack
-    """
-
     def __init__(
         self,
         es_url: str = "https://touche25-rad.webis.de/arguments/",
         index_name: str = "claim_rev",
-        embedding_model_name: str = "dunzhang/stella_en_400M_v5",
     ):
         self.es_client = Elasticsearch(es_url, retry_on_timeout=True)
         self.index_name = index_name
         self.embedding_model = SentenceTransformer(
-            embedding_model_name, trust_remote_code=True
+            "NovaSearch/stella_en_400M_v5", trust_remote_code=True
         )
 
     def get_query_embedding(self, query: str) -> list:
-        # get embedding for query
-        return self.embedding_model.encode(query, prompt_name="s2p_query")
+        # get embedding for query using HuggingFace's sentence-transformers
+        return self.embedding_model.encode([query])[0]
 
     def clean_hit(self, hit: dict) -> dict:
         # remove embedding vectors from hit for display purposes

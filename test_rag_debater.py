@@ -1,7 +1,7 @@
 from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
 from touche_rad.core.rag_pipeline import RAGDebater
 from touche_rad.core.strategy.drivers.rag import RAGStrategy
-from touche_rad.ai.tensorzero_client import TensorZeroClient
+from touche_rad.ai.tensorzero import TensorZeroClient
 from touche_rad.core.context import DebateContext
 
 
