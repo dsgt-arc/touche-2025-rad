@@ -8,19 +8,41 @@ authors = [
 ]
 description = "DS@GT CLEF Touche 2025 RAD"
 readme = "README.md"
-requires-python = ">=3.8"
-dynamic = ["dependencies"]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+    "tqdm",
+    "pyspark>=3.4.0",
+    "pyarrow",
+    "luigi",
+    "python-dotenv",
+    "pyyaml",
+    "openai",
+    "chromadb",
+    "sqlalchemy",
+    "streamlit",
+    "tensorzero",
+    "torch",
+    "sentence-transformers",
+    "transitions",
+    "jupyterlab",
+    "ruff",
+    "pre-commit",
+    "pytest",
+    "duckdb"
+]
 
 [project.urls]
 Homepage = "https://github.com/dsgt-kaggle-clef/touche-2025-rad"
 Issues = "https://github.com/dsgt-kaggle-clef/touche-2025-rad/issues"
 
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
 
-[tool.setuptools.dynamic]
-dependencies = { file = "requirements.in" }
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
