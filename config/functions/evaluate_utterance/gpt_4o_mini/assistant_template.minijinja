@@ -1,0 +1,6 @@
+{
+    "quantity_score": {{ quantity_score }},
+    "quality_score": {{ quality_score }},
+    "relation_score": {{ relation_score }},
+    "manner_score": {{ manner_score }}
+}

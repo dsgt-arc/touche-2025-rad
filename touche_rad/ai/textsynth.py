@@ -2,10 +2,10 @@ import os
 from typing import List
 
 import requests
-from .base import ChatModelEnum, ChatClient, Message
+from .base import ChatResourceEnum, ChatClient, Message
 
 
-class TextSynthEngine(ChatModelEnum):
+class TextSynthEngine(ChatResourceEnum):
     """
     Available chat engines provided by the TextSynth API
     https://textsynth.com/documentation.html#engines

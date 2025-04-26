@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "quantity_score": {
+      "type": "integer",
+      "description": "Score for Quantity (0-1)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "quality_score": {
+      "type": "integer",
+      "description": "Score for Quality (0-1)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "relation_score": {
+      "type": "integer",
+      "description": "Score for Relation (0-1)",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "manner_score": {
+      "type": "integer",
+      "description": "Score for Manner (0-1)",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "required": [
+    "quantity_score",
+    "quality_score",
+    "relation_score",
+    "manner_score"
+  ],
+  "additionalProperties": false
+}

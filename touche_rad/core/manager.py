@@ -4,9 +4,10 @@ from .strategy import create_strategy
 
 
 class DebateManager(object):
-    def __init__(self, strategy_name: str = "random"):
+    def __init__(self, client, strategy_name: str = "random"):
         self.strategy = create_strategy(strategy_name)
-        self.context = DebateContext()
+        self.client = client
+        self.context = DebateContext(client=client)
         self.machine = DebateMachine(model=self.context)
 
     def handle_user_message(self, message: str) -> str:
