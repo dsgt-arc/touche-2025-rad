@@ -32,7 +32,8 @@ dependencies = [
     "ruff",
     "pre-commit",
     "pytest",
-    "duckdb"
+    "duckdb",
+    "elasticsearch>=9.0.1",
 ]
 
 [project.urls]

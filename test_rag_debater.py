@@ -3,6 +3,12 @@ from touche_rad.core.rag_pipeline import RAGDebater
 from touche_rad.core.strategy.drivers.rag import RAGStrategy
 from touche_rad.ai.tensorzero import TensorZeroClient
 from touche_rad.core.context import DebateContext
+from touche_rad.core.machine import DebateMachine
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 def main():
@@ -12,6 +18,8 @@ def main():
     strategy = RAGStrategy(rag_debater, retrieval_mode="text")
 
     context = DebateContext(client=model_client)
+    _ = DebateMachine(model=context)
+
     user_claim = "Social media has a negative impact on mental health."
     context.user_input(user_claim)
 
