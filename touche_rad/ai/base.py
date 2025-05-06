@@ -59,7 +59,7 @@ class EvaluationClient(ABC):
     """
 
     @abstractmethod
-    def evaluate(self, ctx: DebateContext, role: str, utterance: str):
+    def evaluate(self, ctx: "DebateContext", role: str, utterance: str):
         """
         Evaluate an utterance based on the given context
         """
