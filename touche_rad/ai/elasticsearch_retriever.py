@@ -9,7 +9,7 @@ class ElasticsearchRetriever:
     def __init__(
         self,
         es_url: str = "https://touche25-rad.webis.de/arguments/",
-        index_name: str = "claim_rev",
+        index_name: str = "claimrev",
     ):
         self.es_client = Elasticsearch(
             es_url,
