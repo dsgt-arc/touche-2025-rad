@@ -1,4 +1,4 @@
-FROM python:3.12
+FROM python:3.11
 
 RUN apt-get -y update && \
      apt-get -y install default-jre graphviz-dev
