@@ -26,7 +26,7 @@ dependencies:
   - pip
   - pip:
       - torch
-      - elasticsearch>=9.0.1
+      - elasticsearch~=8.15.1
       - chromadb
       - tensorzero
       - ruff

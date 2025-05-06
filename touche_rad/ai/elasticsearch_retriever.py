@@ -2,6 +2,8 @@ from typing import List, Dict, Any
 from elasticsearch import Elasticsearch
 from sentence_transformers import SentenceTransformer
 
+import torch
+
 
 class ElasticsearchRetriever:
     def __init__(
@@ -9,15 +11,30 @@ class ElasticsearchRetriever:
         es_url: str = "https://touche25-rad.webis.de/arguments/",
         index_name: str = "claim_rev",
     ):
-        self.es_client = Elasticsearch(es_url, retry_on_timeout=True)
-        self.index_name = index_name
-        self.embedding_model = SentenceTransformer(
-            "NovaSearch/stella_en_400M_v5", trust_remote_code=True
+        self.es_client = Elasticsearch(
+            es_url,
+            retry_on_timeout=True,
         )
+        self.index_name = index_name
 
-    def get_query_embedding(self, query: str) -> list:
+        if torch.cuda.is_available():
+            self.embedding_model = SentenceTransformer(
+                "dunzhang/stella_en_400M_v5", trust_remote_code=True
+            )
+        else:
+            self.embedding_model = SentenceTransformer(
+                "dunzhang/stella_en_400M_v5",
+                trust_remote_code=True,
+                device="cpu",
+                config_kwargs={
+                    "use_memory_efficient_attention": False,
+                    "unpad_inputs": False,
+                },
+            )
+
+    def get_query_embedding(self, query: str):
         # get embedding for query using HuggingFace's sentence-transformers
-        return self.embedding_model.encode([query])[0]
+        return self.embedding_model.encode(query, prompt_name="s2p_query")
 
     def clean_hit(self, hit: dict) -> dict:
         # remove embedding vectors from hit for display purposes
