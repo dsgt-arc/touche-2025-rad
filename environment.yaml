@@ -1,0 +1,33 @@
+name: touche-rad
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - tqdm
+  - pyspark>=3.4.0
+  - pyarrow
+  - luigi
+  - python-dotenv
+  - pyyaml
+  - openai
+  - sqlalchemy
+  - streamlit
+  - sentence-transformers
+  - transitions
+  - jupyterlab
+  - pytest
+  - duckdb
+  - xformers
+  - pip
+  - pip:
+      - torch
+      - elasticsearch>=9.0.1
+      - chromadb
+      - tensorzero
+      - ruff
+      - pre-commit

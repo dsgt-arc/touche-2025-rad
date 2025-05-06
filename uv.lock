@@ -733,6 +733,33 @@ wheels = [
 ]
 
 [[package]]
+name = "elastic-transport"
+version = "8.17.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6a/54/d498a766ac8fa475f931da85a154666cc81a70f8eb4a780bc8e4e934e9ac/elastic_transport-8.17.1.tar.gz", hash = "sha256:5edef32ac864dca8e2f0a613ef63491ee8d6b8cfb52881fa7313ba9290cac6d2", size = 73425 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cf/cd/b71d5bc74cde7fc6fd9b2ff9389890f45d9762cbbbf81dc5e51fd7588c4a/elastic_transport-8.17.1-py3-none-any.whl", hash = "sha256:192718f498f1d10c5e9aa8b9cf32aed405e469a7f0e9d6a8923431dbb2c59fb8", size = 64969 },
+]
+
+[[package]]
+name = "elasticsearch"
+version = "9.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "elastic-transport" },
+    { name = "python-dateutil" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/39/58/0081e189ef83dd1f11cb600df842bffb8eaa05c097cb1672c5bd335b46c2/elasticsearch-9.0.1.tar.gz", hash = "sha256:76f9b519cfd15a860f615a94ba90dcb9543b721306bc5144ecc15f0b4d5d2781", size = 819519 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f3/eb/03140387b1a378878a4228d0d796e80298ac54fc4fe6fe9e39087d142efe/elasticsearch-9.0.1-py3-none-any.whl", hash = "sha256:9fd110f9bb77310343709d9cccbd523a431a6e528d8441b01a26b97eef3238a3", size = 905510 },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -4029,6 +4056,7 @@ source = { editable = "." }
 dependencies = [
     { name = "chromadb" },
     { name = "duckdb" },
+    { name = "elasticsearch" },
     { name = "jupyterlab" },
     { name = "luigi" },
     { name = "matplotlib" },
@@ -4056,6 +4084,7 @@ dependencies = [
 requires-dist = [
     { name = "chromadb" },
     { name = "duckdb" },
+    { name = "elasticsearch", specifier = ">=9.0.1" },
     { name = "jupyterlab" },
     { name = "luigi" },
     { name = "matplotlib" },
