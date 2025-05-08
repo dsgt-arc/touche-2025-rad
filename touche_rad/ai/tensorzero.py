@@ -2,7 +2,6 @@ import os
 import json
 from typing import Generator, List, Union
 
-from touche_rad.core.context import DebateContext
 from .base import ChatResourceEnum, EvaluationClient
 from tensorzero import InferenceChunk, TensorZeroGateway, InferenceResponse
 
@@ -42,10 +41,8 @@ class TensorZeroClient(EvaluationClient):
     TensorZeroClient - a provider agnostic client to interface with the tensorzero gateway inference engine
     """
 
-    def __init__(
-        self,
-    ):
-        self._client = TensorZeroGateway(os.environ.get("TENSORZERO_GATEWAY_URL"))
+    def __init__(self, base_url: str = os.environ.get("TENSORZERO_GATEWAY_URL")):
+        self._client = TensorZeroGateway(base_url=base_url)
 
     def _inference(
         self,
@@ -77,9 +74,7 @@ class TensorZeroClient(EvaluationClient):
             },
         )
 
-    def evaluate(
-        self, ctx: DebateContext, role: str, utterance: str
-    ) -> Union[List[Union[int, None]], str]:
+    def evaluate(self, ctx, role, utterance) -> Union[List[Union[int, None]], str]:
         """Evaluates an utterance, handling potential errors and None claim."""
         if role == "user":
             previous_message = (
@@ -147,3 +142,15 @@ class TensorZeroClient(EvaluationClient):
         except Exception as e:
             error_msg = f"An error occurred calling evaluation service: {e}"
             return f"An error occurred during evaluation: {error_msg}"
+
+    def generate(
+        self,
+        prompt: str,
+        model=TensorZeroChatResourceModel.GPT4_O,
+    ):
+        with self._client as client:
+            response: InferenceResponse = client.inference(
+                model_name=model,
+                input={"messages": [{"role": "user", "content": prompt}]},
+            )
+            return response.content[0].text

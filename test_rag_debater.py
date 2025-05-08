@@ -13,7 +13,7 @@ load_dotenv()
 
 def main():
     retriever = ElasticsearchRetriever()
-    model_client = TensorZeroClient()
+    model_client = TensorZeroClient(base_url="http://localhost:3000")
     rag_debater = RAGDebater(retriever, model_client)
     strategy = RAGStrategy(rag_debater, retrieval_mode="text")
 
