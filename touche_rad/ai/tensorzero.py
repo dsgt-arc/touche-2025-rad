@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 from typing import Generator, List, Union
 
 from .base import ChatResourceEnum, EvaluationClient
@@ -42,29 +43,34 @@ class TensorZeroClient(EvaluationClient):
     """
 
     def __init__(self, base_url: str = os.environ.get("TENSORZERO_GATEWAY_URL")):
-        self._client = TensorZeroGateway(base_url=base_url)
+        if not base_url:
+            raise ValueError("TensorZero base_url is None")
+        self._client: TensorZeroGateway = TensorZeroGateway.build_http(
+            gateway_url=base_url,
+        )
 
     def _inference(
         self,
         fn: str,
+        episode: uuid.UUID,
         role: str,
         utterance: str,
-        prev: str,
+        convo: List[str],
         user_claim: str,
     ) -> InferenceResponse | Generator[InferenceChunk, None, None]:
-        payload_role = "assistant" if role == "system" else role
         return self._client.inference(
             function_name=fn,
+            episode_id=episode,
             input={
                 "messages": [
                     {
-                        "role": payload_role,
+                        "role": "user",
                         "content": [
                             {
                                 "type": "text",
                                 "arguments": {
                                     "argument": utterance,
-                                    "previous_message": prev,
+                                    "conversation": convo,
                                     "claim": user_claim,
                                 },
                             }
@@ -77,16 +83,10 @@ class TensorZeroClient(EvaluationClient):
     def evaluate(self, ctx, role, utterance) -> Union[List[Union[int, None]], str]:
         """Evaluates an utterance, handling potential errors and None claim."""
         if role == "user":
-            previous_message = (
-                "" if len(ctx.system_utterances) == 0 else ctx.system_utterances[-1]
-            )
             current_claim = ctx.user_claim
             if current_claim is None:
                 current_claim = utterance
         else:
-            previous_message = (
-                "" if len(ctx.user_utterances) == 0 else ctx.user_utterances[-1]
-            )
             current_claim = ctx.user_claim
             if current_claim is None:
                 current_claim = ""
@@ -94,9 +94,10 @@ class TensorZeroClient(EvaluationClient):
         try:
             res_obj = self._inference(
                 TensorZeroChatResourceFunction.EVALUATE_UTTERANCE,
-                role="user",
+                episode=ctx.debate_id,
+                role=role,
                 utterance=utterance,
-                prev=previous_message,
+                convo=ctx.get_conversation(),
                 user_claim=current_claim,
             )
 
@@ -148,9 +149,9 @@ class TensorZeroClient(EvaluationClient):
         prompt: str,
         model=TensorZeroChatResourceModel.GPT4_O,
     ):
-        with self._client as client:
-            response: InferenceResponse = client.inference(
-                model_name=model,
-                input={"messages": [{"role": "user", "content": prompt}]},
-            )
-            return response.content[0].text
+        # with self._client as client:
+        response: InferenceResponse = self._client.inference(
+            model_name=model,
+            input={"messages": [{"role": "user", "content": prompt}]},
+        )
+        return response.content[0].text

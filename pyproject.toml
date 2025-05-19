@@ -34,7 +34,6 @@ dependencies = [
     "pytest",
     "duckdb",
     "elasticsearch>=9.0.1",
-    "xformers",
 ]
 
 [project.urls]

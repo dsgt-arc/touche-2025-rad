@@ -1,4 +1,7 @@
-from typing import Optional
+import uuid
+
+from typing import List, Optional
+from uuid_utils import compat
 
 
 class DebateContext(object):
@@ -12,7 +15,7 @@ class DebateContext(object):
         current_turn: int = 0,
         max_turns: int = 3,
         conclusion_requested: bool = False,
-        debate_id: str = None,
+        debate_id: uuid.UUID = None,
     ):
         self.debate_id = debate_id or self._generate_id()
         self.client = client
@@ -36,6 +39,20 @@ class DebateContext(object):
             return None
         return self.user_utterances[-1]
 
+    def get_conversation(self) -> List[str]:
+        conversation = []
+        user_len = len(self.user_utterances)
+        system_len = len(self.system_utterances)
+        max_len = max(user_len, system_len)
+
+        for i in range(max_len):
+            if i < user_len:
+                conversation.append(self.user_utterances[i])
+            # Ensure system utterance exists and is not None/empty before appending
+            if i < system_len and self.system_utterances[i]:
+                conversation.append(self.system_utterances[i])
+        return conversation
+
     def reset_debate(self):
         """Reset the debate context to its initial state."""
         self.user_utterances = []
@@ -48,9 +65,7 @@ class DebateContext(object):
 
     def _generate_id(self):
         """Generate a unique ID for this debate."""
-        import uuid
-
-        return str(uuid.uuid4())
+        return compat.uuid7()
 
     def should_conclude(self):
         """Check if the debate should conclude."""

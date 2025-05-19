@@ -5,15 +5,18 @@
       "type": "string",
       "description": "The debate argument to be evaluated."
     },
-    "previous_message": {
-      "type": "string",
-      "description": "The immediately preceding message to which the argument is a response."
+    "conversation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The full conversation prior to the argument provided. User messages are of even index, and system messages are of odd index."
     },
     "claim": {
       "type": "string",
       "description": "The original claim that the argument is responding to."
     }
   },
-  "required": ["argument", "previous_message", "claim"],
+  "required": ["argument", "conversation", "claim"],
   "additionalProperties": false
 }
