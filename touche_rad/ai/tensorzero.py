@@ -146,11 +146,13 @@ class TensorZeroClient(EvaluationClient):
 
     def generate(
         self,
+        ctx,
         prompt: str,
         model=TensorZeroChatResourceModel.GPT4_O,
     ):
         # with self._client as client:
         response: InferenceResponse = self._client.inference(
+            episode_id=ctx.debate_id,
             model_name=model,
             input={"messages": [{"role": "user", "content": prompt}]},
         )
