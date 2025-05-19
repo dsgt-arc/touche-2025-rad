@@ -13,5 +13,5 @@ st.markdown(
 )
 client = TensorZeroClient()
 if "manager" not in st.session_state:
-    st.session_state.manager = DebateManager(client=client)
+    st.session_state.manager = DebateManager(client=client, strategy_name="rag")
 Chat(msg_callback=st.session_state.manager.handle_user_message).render()
