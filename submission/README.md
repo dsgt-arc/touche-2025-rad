@@ -2,7 +2,7 @@
 
 This is a simple proxy to the rest of the services.
 
-# How to run
+## How to run the local submission
 
 To compile dependencies:
 
@@ -16,6 +16,11 @@ To run the services:
 docker compose build
 docker compose up
 ```
+
+Then you can run the gensimir interface on port 8000.
+Use the sample-conf.json to get a locally running version of the service.
+
+## How to run the submission
 
 Do the tira things:
 

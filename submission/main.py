@@ -71,3 +71,9 @@ app = FastAPI()
 async def respond(request: Request):
     content, arguments = reply(request.messages)
     return {"content": content, "arguments": arguments}
+
+
+# healthcheck endpoint
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

@@ -1,0 +1,13 @@
+{
+  "topic": {},
+  "user": {
+    "class": "Touche25RADUser",
+    "url": "https://touche25-rad.webis.de/user-sim/api/chat",
+    "model": "base-user"
+  },
+  "system": {
+    "class": "BasicChatSystem",
+    "url": "http://localhost:8080"
+  },
+  "maxTurns": 3
+}
