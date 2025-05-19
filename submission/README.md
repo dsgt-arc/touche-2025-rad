@@ -29,6 +29,7 @@ Run the `tira-cli login` command as per the instructions in the tira submission 
 tira-cli code-submission \
     --path . \
     --task retrieval-augmented-debating-2025 \
+    --dataset rad25-2025-01-16-toy-20250116-training \
     --command '/genirsim/run.sh         --configuration-file=$inputDataset/*.json --parameter-file=$inputDataset/*.tsv --output-file=$outputDir/simulations.jsonl' \
     --allow-network \
     --dry-run
