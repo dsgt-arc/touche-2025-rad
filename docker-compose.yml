@@ -35,7 +35,7 @@ services:
     command: --config-file /app/config/tensorzero.toml
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
-      - TENSORZERO_CLICKHOUSE_URL
+      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123
     ports:
       - "3000:3000"
     extra_hosts:
@@ -50,7 +50,7 @@ services:
       - ./config:/app/config:ro
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
-      - TENSORZERO_CLICKHOUSE_URL
+      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123
       - TENSORZERO_GATEWAY_URL=http://gateway:3000
     ports:
       - "4000:4000"
