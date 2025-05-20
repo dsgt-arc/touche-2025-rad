@@ -1,11 +1,16 @@
 services:
-  app: &app
+  gensimir:
+    build: ./submission
+    ports: ["8080:8080", "8000:8000"]
+    entrypoint: /genirsim/serve.sh
+
+  chat_demo:
     build: .
     volumes:
       - .:/app
     ports:
       - "8501:8501"
-    command: streamlit run app.py
+    command: streamlit run demo/chat_app.py
     environment:
       - TEXTSYNTH_API_KEY
       - OPENAI_API_KEY
