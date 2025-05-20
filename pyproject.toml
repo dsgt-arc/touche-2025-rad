@@ -10,7 +10,7 @@ description = "DS@GT CLEF Touche 2025 RAD"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy",
+    "numpy>=1.26.4,<2.0",
     "pandas",
     "matplotlib",
     "scikit-learn",
@@ -33,8 +33,7 @@ dependencies = [
     "pre-commit",
     "pytest",
     "duckdb",
-    "elasticsearch>=9.0.1",
-    "xformers",
+    "elasticsearch~=8.15.1",
 ]
 
 [project.urls]

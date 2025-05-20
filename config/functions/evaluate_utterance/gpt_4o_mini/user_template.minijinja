@@ -1,16 +1,42 @@
 # Task Description
-Evaluate the provided argument based on Grice's Maxims (Quantity, Quality, Relation, Manner) in the context of the preceding message and the overall debate claim.
+Evaluate the provided argument using Grice's Maxims (Quantity, Quality, Relation, Manner) in the context of the preceding conversation and the overall debate claim.
 
 # Input Data
 Argument: {{ argument }}
-Previous Message (Context): {{ previous_message }}
+Full conversation prior to provided argument, alternating by user utterance, system utterance: {{ conversation }}
 Original User Claim: {{ claim }}
 
 # Evaluation Criteria & Scoring
-- Quantity: Is the argument as informative as required (not too much, not too little)? Score 1 if yes, 0 if no.
-- Quality: Is the argument truthful and evidence-based (or clearly opinion if appropriate)? Score 1 if yes, 0 if no.
-- Relation: Is the argument relevant to the previous message and the claim? Score 1 if yes, 0 if no.
-- Manner: Is the argument clear, brief, and orderly (not obscure or ambiguous)? Score 1 if yes, 0 if no.
+For each maxim, assign a score of 1 (meets the criterion) or 0 (does not meet the criterion). Use the following definitions and examples:
+
+- **Quantity**: The argument provides enough information to be useful and relevant, but not more than necessary.
+  - Score 1: The argument adds new, relevant information or clarification.
+  - Score 0: The argument is too vague, repeats previous points, or adds nothing new.
+
+- **Quality**: The argument is truthful, evidence-based, or clearly marked as opinion if appropriate.
+  - Score 1: The argument makes a factual claim with evidence, or clearly states it is an opinion.
+  - Score 0: The argument is misleading, unsupported, or makes false claims.
+
+- **Relation**: The argument is relevant to the previous message and the original claim.
+  - Score 1: The argument directly addresses the previous message or the claim.
+  - Score 0: The argument is off-topic or unrelated.
+
+- **Manner**: The argument is clear, concise, and well-structured.
+  - Score 1: The argument is easy to understand, not ambiguous, and avoids unnecessary complexity.
+  - Score 0: The argument is confusing, ambiguous, or poorly structured.
+
+**Examples:**
+- Argument: "I disagree because oranges actually smell good, and that's why people like them."
+  - quantity_score: 1 (adds new info)
+  - quality_score: 1 (truthful, plausible)
+  - relation_score: 1 (directly addresses claim)
+  - manner_score: 1 (clear and concise)
+
+- Argument: "You make a good point, and I'll clarify my previous statement."
+  - quantity_score: 0 (no new info)
+  - quality_score: 1 (not false, but not informative)
+  - relation_score: 1 (responds to previous message)
+  - manner_score: 1 (clear, but vague)
 
 # Output Instructions (CRITICAL)
 Your response MUST be a single, valid, serializable JSON object.
@@ -18,23 +44,7 @@ The JSON object MUST contain exactly four keys: "quantity_score", "quality_score
 Each key's value MUST be an integer, either 0 or 1.
 Do NOT include any text, explanations, summaries, or markdown formatting (like ```json) before or after the JSON object. Just output the raw JSON.
 
-# Examples of Expected Output Format:
-{
-  "quantity_score": 1,
-  "quality_score": 0,
-  "relation_score": 1,
-  "manner_score": 1
-}
-# Another example:
-{
-  "quantity_score": 0,
-  "quality_score": 1,
-  "relation_score": 0,
-  "manner_score": 1
-}
-
-
 # Final Instruction
-Based on the input data, evaluation criteria, and strict output instructions, generate ONLY the required JSON object now.
+Carefully consider each criterion. Do NOT default to all 1s. Penalize vague, non-informative, or unsupported arguments. Output ONLY the required JSON object.
 
 Output JSON:

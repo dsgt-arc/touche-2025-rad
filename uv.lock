@@ -1,6 +1,5 @@
 version = 1
-revision = 2
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
     "python_full_version < '3.13'",
@@ -3336,7 +3335,6 @@ dependencies = [
     { name = "torch" },
     { name = "tqdm" },
     { name = "transitions" },
-    { name = "xformers" },
 ]
 
 [package.metadata]
@@ -3365,7 +3363,6 @@ requires-dist = [
     { name = "torch" },
     { name = "tqdm" },
     { name = "transitions" },
-    { name = "xformers" },
 ]
 
 [[package]]
@@ -3745,6 +3742,7 @@ wheels = [
 ]
 
 [[package]]
+<<<<<<< HEAD
 name = "xformers"
 version = "0.0.29.post3"
 source = { registry = "https://pypi.org/simple" }
@@ -3759,6 +3757,8 @@ wheels = [
 ]
 
 [[package]]
+=======
+>>>>>>> de84359 (add episode ids, improve prompt for eval; tz upgrades)
 name = "zipp"
 version = "3.21.0"
 source = { registry = "https://pypi.org/simple" }

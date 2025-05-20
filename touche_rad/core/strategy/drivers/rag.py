@@ -24,5 +24,5 @@ class RAGStrategy(BaseStrategy):
         if not user_message:
             return "Please provide a claim to start the debate."
         return self.rag_debater.generate_response(
-            user_message, retrieval_mode=self.retrieval_mode
+            context, user_message, retrieval_mode=self.retrieval_mode
         )

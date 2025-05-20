@@ -10,15 +10,16 @@ services:
       - TEXTSYNTH_API_KEY
       - OPENAI_API_KEY
       - STREAMLIT_SERVER_ADDRESS
-      - TENSORZERO_GATEWAY_URL=gateway:3000
+      - TENSORZERO_GATEWAY_URL=http://gateway:3000
+      - TENSORZERO_CLICKHOUSE_URL
 
   # tensorzero demo setup stuff
   clickhouse:
     image: clickhouse/clickhouse-server:24.12-alpine
     environment:
+      - CLICKHOUSE_USER
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
-      - CLICKHOUSE_USER=${CLICKHOUSE_USER?clickhouse user not set}
-      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD?clickhouse password not set}
+      - CLICKHOUSE_PASSWORD
     ports:
       - "8123:8123"
     healthcheck:
@@ -31,11 +32,14 @@ services:
     image: tensorzero/gateway
     volumes:
       - ./config:/app/config:ro
+    command: --config-file /app/config/tensorzero.toml
     environment:
-      - OPENAI_API_KEY
-      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123/ping
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
+      - TENSORZERO_CLICKHOUSE_URL
     ports:
       - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -45,8 +49,8 @@ services:
     volumes:
       - ./config:/app/config:ro
     environment:
-      - OPENAI_API_KEY
-      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123/ping
+      - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
+      - TENSORZERO_CLICKHOUSE_URL
       - TENSORZERO_GATEWAY_URL=http://gateway:3000
     ports:
       - "4000:4000"
