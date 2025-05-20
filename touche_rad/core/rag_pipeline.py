@@ -12,7 +12,11 @@ class RAGDebater:
         self.top_k = top_k
 
     def generate_response(
-        self, ctx, user_message: str, retrieval_mode: str = "text"
+        self,
+        ctx,
+        user_message: str,
+        retrieval_mode: str = "text",
+        include_evidence: bool = True,
     ) -> str:
         """
         1. Retrieve evidence from retriever using the specified retrieval_mode.
@@ -26,6 +30,9 @@ class RAGDebater:
         evidence_texts = [item["text"] for item in evidence if "text" in item]
         prompt = self._build_prompt(user_message, evidence_texts, retrieval_mode)
         response = self.model_client.generate(ctx, prompt)
+        # TODO: this is gross, just use this interface everywhere it's called
+        if include_evidence:
+            return response, evidence
         return response
 
     def _build_prompt(

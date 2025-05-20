@@ -19,10 +19,10 @@ class RAGStrategy(BaseStrategy):
         # For now, just return None or use context to determine type if needed
         return None
 
-    def generate_response(self, context: DebateContext) -> str:
+    def generate_response(self, context: DebateContext, *args, **kwargs) -> str:
         user_message = context.last_user_message
         if not user_message:
             return "Please provide a claim to start the debate."
         return self.rag_debater.generate_response(
-            context, user_message, retrieval_mode=self.retrieval_mode
+            context, user_message, retrieval_mode=self.retrieval_mode, *args, **kwargs
         )

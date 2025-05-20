@@ -36,9 +36,12 @@ class ElasticsearchRetriever:
         # get embedding for query using HuggingFace's sentence-transformers
         return self.embedding_model.encode(query, prompt_name="s2p_query")
 
-    def clean_hit(self, hit: dict) -> dict:
+    def clean_hit(self, hit: dict, rank=1) -> dict:
         # remove embedding vectors from hit for display purposes
         source = hit["_source"].copy()
+        source["key"] = rank
+        source["id"] = hit["_id"]
+        source["score"] = hit["_score"]
         fields_to_remove = [
             "attacks_embedding_stella",
             "supports_embedding_stella",
@@ -72,4 +75,6 @@ class ElasticsearchRetriever:
                 "num_candidates": num_candidates,
             },
         )
-        return [self.clean_hit(hit) for hit in resp["hits"]["hits"]]
+        return [
+            self.clean_hit(hit, i + 1) for i, hit in enumerate(resp["hits"]["hits"])
+        ]
