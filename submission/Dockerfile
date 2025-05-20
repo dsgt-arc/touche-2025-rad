@@ -5,4 +5,4 @@ FROM ghcr.io/touche-webis-de/touche25-retrieval-augmented-debating-base:${BASE_I
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
-COPY main.py start.sh ./
+COPY main.py start.sh proxy.py ./

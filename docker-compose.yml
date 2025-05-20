@@ -1,9 +1,4 @@
 services:
-  gensimir:
-    build: ./submission
-    ports: ["8080:8080", "8000:8000"]
-    entrypoint: /genirsim/serve.sh
-
   app: &app
     build: .
     volumes: [".:/app"]
@@ -15,6 +10,16 @@ services:
       - STREAMLIT_SERVER_ADDRESS
       - TENSORZERO_GATEWAY_URL=http://gateway:3000
       - TENSORZERO_CLICKHOUSE_URL
+
+  gensimir:
+    build: ./submission
+    ports: ["8080:8080", "8000:8000"]
+    entrypoint: /genirsim/serve.sh
+    environment:
+      - BASE_URL=http://app:8500
+    depends_on:
+      app:
+        condition: service_started
 
   chat_demo:
     <<: *app
