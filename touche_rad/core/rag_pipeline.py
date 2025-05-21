@@ -40,6 +40,7 @@ class RAGDebater:
     ) -> str:
         prompt = (
             f"You are a debate assistant. Use the following {retrieval_mode} evidence to respond to the user's claim.\n"
+            "You do not need to give your specific citations from within the response, just respond using the relevant evidence as best seen fit. Limit your response to 60 words or less.\n "
             f"User claim: {user_message}\n"
         )
         if evidence_texts:
