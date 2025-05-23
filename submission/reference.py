@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import Any, List
+from typing import List
 
 client = Elasticsearch("https://touche25-rad.webis.de/arguments")
 index = "claimrev"
@@ -14,17 +14,6 @@ class Message(BaseModel):
 
 class DebateRequest(BaseModel):
     messages: List[Message]
-
-
-"""
-Types for Eval System
-"""
-
-
-# class EvalRequest(BaseModel):
-#     model: str
-#     keep_alive: str
-#     messages: List[Message]
 
 
 """
@@ -92,16 +81,6 @@ Debate system endpoints
 async def respond(request: DebateRequest):
     content, arguments = reply(request.messages)
     return {"content": content, "arguments": arguments}
-
-
-"""
-Eval system endpoints
-"""
-
-
-@app.post("/evaluate")
-async def evaluate(request: Any):
-    return {"message": {"content": {"explanation": "your explanation", "score": 0.5}}}
 
 
 # healthcheck endpoint
