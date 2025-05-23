@@ -12,8 +12,46 @@ class Message(BaseModel):
     content: str
 
 
-class Request(BaseModel):
+class DebateRequest(BaseModel):
     messages: List[Message]
+
+
+"""
+Types for Eval System
+"""
+
+
+class Argument(BaseModel):
+    id: str
+    text: str
+
+
+class RetrievalResponse(BaseModel):
+    arguments: List[Argument]
+
+
+class SystemResponse(BaseModel):
+    utterance: str
+    response: RetrievalResponse
+
+
+class UserTurn(BaseModel):
+    utterance: str
+    systemResponse: SystemResponse
+
+
+class Simulation(BaseModel):
+    userTurns: List[UserTurn]
+
+
+class EvalRequest(BaseModel):
+    simulation: Simulation
+    userTurnIndex: int | None = None
+
+
+"""
+Fns for debate system
+"""
 
 
 def reply(messages: List[Message]):
@@ -67,8 +105,13 @@ def query_elastic(claim, size=1):
 app = FastAPI()
 
 
+"""
+Debate system endpoints
+"""
+
+
 @app.post("/")
-async def respond(request: Request):
+async def respond(request: DebateRequest):
     content, arguments = reply(request.messages)
     return {"content": content, "arguments": arguments}
 
@@ -77,3 +120,36 @@ async def respond(request: Request):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+"""
+Eval system endpoints
+"""
+
+
+@app.post("/quantity")
+async def quantity(request: EvalRequest):
+    if not request.userTurnIndex:
+        return {"score": None}
+    return {"score": 1}
+
+
+@app.post("/quality")
+async def quality(request: EvalRequest):
+    if not request.userTurnIndex:
+        return {"score": None}
+    return {"score": 1}
+
+
+@app.post("/relation")
+async def relation(request: EvalRequest):
+    if not request.userTurnIndex:
+        return {"score": None}
+    return {"score": 1}
+
+
+@app.post("/manner")
+async def manner(request: EvalRequest):
+    if not request.userTurnIndex:
+        return {"score": None}
+    return {"score": 1}
