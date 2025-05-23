@@ -3,15 +3,22 @@ import os
 from jinja2 import Environment, PackageLoader, select_autoescape
 from openai import OpenAI
 import yaml
+from pathlib import Path
+import json
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
-from typing import Optional
 
 load_dotenv()
 env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
+
+# openai/gpt-4o
+# google/gemini-2.5-flash-preview-05-20
+# google/gemma-3n-e4b-it:free
+MODEL = os.getenv("MODEL", "google/gemini-2.5-flash-preview-05-20")
+SYSTEM = os.getenv("SYSTEM", "dev")
 
 
 class Message(BaseModel):
@@ -21,7 +28,6 @@ class Message(BaseModel):
 
 class Request(BaseModel):
     messages: List[Message]
-    model: Optional[str] = "openai/gpt-4o"
 
 
 app = FastAPI()
@@ -37,7 +43,7 @@ client = OpenAI(
 async def respond(request: Request):
     # get the message for user and assistant
     # we're given some odd number of messages that need to be placed into the context appropriately
-
+    print(request)
     # let's generate the prompt that we want to use
     evidence = retriever.retrieve(
         request.messages[0].content,
@@ -54,7 +60,7 @@ async def respond(request: Request):
     )
 
     completion = client.chat.completions.create(
-        model=request.model,
+        model=MODEL,
         messages=request.messages
         + [
             {
@@ -65,6 +71,22 @@ async def respond(request: Request):
     )
     content = completion.choices[0].message.content
     resp = {"content": content, "arguments": evidence}
+
+    if os.environ.get("LOG_PATH"):
+        log_path = Path(os.environ.get("LOG_PATH"))
+        log_path.mkdir(parents=True, exist_ok=True)
+        # jsonl
+        with open(log_path / "log.jsonl", "a") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "request": request.dict(),
+                        "completion": completion.to_dict(),
+                        "response": resp,
+                    }
+                )
+                + "\n"
+            )
     return resp
 
 

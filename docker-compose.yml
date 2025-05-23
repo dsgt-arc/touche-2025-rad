@@ -2,7 +2,9 @@ services:
   app: &app
     build: .
     restart: always
-    volumes: [".:/app"]
+    volumes:
+      - .:/app
+      - $HOME/scratch/touche-rad/logs:/var/log
     ports: ["8500:8500"]
     command: fastapi run --reload --port 8500 app.py
     environment:
@@ -12,6 +14,7 @@ services:
       - STREAMLIT_SERVER_ADDRESS
       - TENSORZERO_GATEWAY_URL=http://gateway:3000
       - TENSORZERO_CLICKHOUSE_URL
+      - LOG_PATH=/var/log
 
   gensimir:
     build:
