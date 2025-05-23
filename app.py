@@ -148,34 +148,33 @@ async def respond(request: Request):
 
 
 DIMENSION_DEFINITIONS = {
-    "quantity": "The counter-argument provides a sufficient amount of information, reasons, and/or evidence for its claims. It adequately addresses the main points of the argument it is responding to.",
-    "quality": "The counter-argument presents logical, coherent, and well-reasoned points. The information used is accurate and credible where applicable. The reasoning is sound and persuasive.",
-    "relation": "The counter-argument is directly relevant to the argument it is responding to. It stays on topic and clearly addresses the core issues or claims raised in the argument, rather than deflecting or discussing unrelated matters.",
-    "manner": "The counter-argument uses clear, grammatically correct, and unambiguous language. It sticks to the main topic and does not make things overly complicated. The tone is appropriate and respectful.",
+    "quantity": "The counter-argument provides enough relevant information, reasons, and evidence to support its claims. It addresses all major points raised in the original argument, leaving no significant gaps.",
+    "quality": "The counter-argument uses logical, coherent, and well-structured reasoning. Its claims are accurate, credible, and well-supported by appropriate evidence. The argument is persuasive and free from logical fallacies.",
+    "relation": "The counter-argument is directly relevant to the original argument. It responds specifically to the main issues or claims, without digressing or introducing unrelated topics.",
+    "manner": "The counter-argument is expressed clearly and unambiguously, using correct grammar and appropriate language. It maintains a respectful tone and avoids unnecessary complexity or confusion.",
 }
-PROMPT_TEMPLATE = """### Issue:
-{issue}
-
-### Argument:
-{argument}
-
-### Counter-argument:
-{counter_argument}
-
-### Definition of {dimension_name}:
-{dimension_definition}
-
-### Task:
-On a scale from 0 (extremely bad) to 1 (extremely good), how would you rate the {dimension_name} of the counter-argument?
-
-Format your message as only one JSON object with exactly these keys:
-- key='explanation': A concise yet descriptive explanation of your score.
-- key='score': The score as number between 0 and 1, 0 being extremely bad, and 1 being exceptionally good.
-
-### Example:
-{{"explanation":"your explanation","score":0.5}}
-
-Your response:
+PROMPT_TEMPLATE = """"### Issue:\n"
+    "{issue}\n\n"
+    "### Argument:\n"
+    "{argument}\n\n"
+    "### Counter-argument:\n"
+    "{counter_argument}\n\n"
+    "### Definition of {dimension_name}:\n"
+    "{dimension_definition}\n\n"
+    "### Task:\n"
+    "Critically evaluate the {dimension_name} of the counter-argument on a scale from 0 (extremely poor) to 1 (exceptional), using increments of 0.01.\n\n"
+    "Be highly discerning and rigorous in your assessment:\n"
+    "- Actively look for weaknesses, gaps, or areas for improvement.\n"
+    "- A score of 1.0 should be reserved for responses that are flawless and could not be improved in any way—this should be extremely rare.\n"
+    "- A score of 0.5 means the response is adequate but has clear room for improvement.\n"
+    "- Most responses should fall between 0 and 0.8 unless they are truly outstanding.\n"
+    "- Justify your score by referencing specific strengths and weaknesses in the counter-argument.\n\n"
+    "Format your response as a single JSON object with exactly these keys:\n"
+    "- key='explanation': A concise, critical explanation of your score, citing both strengths and weaknesses.\n"
+    "- key='score': The score as a number between 0 and 1 (e.g., 0.00, 0.50, 0.79).\n\n"
+    "### Example:\n"
+    "{{\"explanation\":\"The counter-argument addresses the main point but lacks depth and omits key evidence. Reasoning is mostly sound but could be clearer.\",\"score\":0.62}}\n\n"
+    "Your response:\n"
 """
 
 
