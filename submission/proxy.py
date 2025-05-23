@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Any
 import requests
 import logging
 from fastapi import FastAPI
@@ -19,6 +19,17 @@ class Message(BaseModel):
 
 class Request(BaseModel):
     messages: list[Message]
+
+
+class Topic(BaseModel):
+    description: str
+
+
+class Configuration(BaseModel):
+    topic: Topic
+    user: Any
+    system: Any
+    maxTurns: int
 
 
 class Argument(BaseModel):
@@ -41,7 +52,9 @@ class UserTurn(BaseModel):
 
 
 class Simulation(BaseModel):
+    configuration: Configuration
     userTurns: List[UserTurn]
+    milliseconds: float
 
 
 class GenIREvalRequest(BaseModel):
@@ -75,7 +88,7 @@ async def process_evaluation(request: GenIREvalRequest, dimension_name: str):
     idx = request.userTurnIndex
 
     if idx is None or idx < 0 or idx >= len(request.simulation.userTurns):
-        idx = len(request.simulation.userTurns)
+        idx = len(request.simulation.userTurns) - 1
 
     if idx < 0:
         logger.error("Proxy: No user turns found in the simulation.")
@@ -85,7 +98,7 @@ async def process_evaluation(request: GenIREvalRequest, dimension_name: str):
 
     current_turn = request.simulation.userTurns[idx]
     app_payload = AppEvalRequest(
-        dimension_name=dimension_name,
+        dimension=dimension_name,
         issue=request.simulation.configuration.topic.description,
         argument=current_turn.utterance,
         counter_argument=current_turn.systemResponse.utterance,

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 import os
 from jinja2 import Environment, PackageLoader, select_autoescape
 from openai import OpenAI
@@ -34,6 +34,17 @@ class Request(BaseModel):
     messages: List[Message]
 
 
+class Topic(BaseModel):
+    description: str
+
+
+class Configuration(BaseModel):
+    topic: Topic
+    user: Any
+    system: Any
+    maxTurns: int
+
+
 class Argument(BaseModel):
     id: str
     text: str
@@ -54,10 +65,12 @@ class UserTurn(BaseModel):
 
 
 class Simulation(BaseModel):
+    configuration: Configuration
     userTurns: List[UserTurn]
+    milliseconds: float
 
 
-class EvalRequest(BaseModel):
+class GenIREvalRequest(BaseModel):
     simulation: Simulation
     userTurnIndex: int | None = None
 
