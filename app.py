@@ -153,35 +153,13 @@ DIMENSION_DEFINITIONS = {
     "relation": "The counter-argument is directly relevant to the original argument. It responds specifically to the main issues or claims, without digressing or introducing unrelated topics.",
     "manner": "The counter-argument is expressed clearly and unambiguously, using correct grammar and appropriate language. It maintains a respectful tone and avoids unnecessary complexity or confusion.",
 }
-PROMPT_TEMPLATE = """"### Issue:\n"
-    "{issue}\n\n"
-    "### Argument:\n"
-    "{argument}\n\n"
-    "### Counter-argument:\n"
-    "{counter_argument}\n\n"
-    "### Definition of {dimension_name}:\n"
-    "{dimension_definition}\n\n"
-    "### Task:\n"
-    "Critically evaluate the {dimension_name} of the counter-argument on a scale from 0 (extremely poor) to 1 (exceptional), using increments of 0.01.\n\n"
-    "Be highly discerning and rigorous in your assessment:\n"
-    "- Actively look for weaknesses, gaps, or areas for improvement.\n"
-    "- A score of 1.0 should be reserved for responses that are flawless and could not be improved in any way—this should be extremely rare.\n"
-    "- A score of 0.5 means the response is adequate but has clear room for improvement.\n"
-    "- Most responses should fall between 0 and 0.8 unless they are truly outstanding.\n"
-    "- Justify your score by referencing specific strengths and weaknesses in the counter-argument.\n\n"
-    "Format your response as a single JSON object with exactly these keys:\n"
-    "- key='explanation': A concise, critical explanation of your score, citing both strengths and weaknesses.\n"
-    "- key='score': The score as a number between 0 and 1 (e.g., 0.00, 0.50, 0.79).\n\n"
-    "### Example:\n"
-    "{{\"explanation\":\"The counter-argument addresses the main point but lacks depth and omits key evidence. Reasoning is mostly sound but could be clearer.\",\"score\":0.62}}\n\n"
-    "Your response:\n"
-"""
 
 
 @app.post("/evaluate")
 async def evaluate(request: AppEvalRequest):
     definition = DIMENSION_DEFINITIONS[request.dimension]
-    prompt = PROMPT_TEMPLATE.format(
+    prompt_template = env.get_template("eval.md.j2")
+    prompt = prompt_template.render(
         issue=request.issue,
         argument=request.argument,
         counter_argument=request.counter_argument,
@@ -189,15 +167,13 @@ async def evaluate(request: AppEvalRequest):
         dimension_definition=definition,
     )
     try:
-        response = (
-            model_client._client.inference(
-                model_name=TensorZeroChatResourceModel.GPT4_O_LATEST,
-                input={"messages": [{"role": "user", "content": prompt}]},
-            )
-            .content[0]
-            .text
+        completion = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
         )
-        res = json.loads(response)
+        response_content = completion.choices[0].message.content
+        res = json.loads(response_content)
         if "score" not in res or "explanation" not in res:
             logger.error(
                 f"LLM response for {request.dimension_name} missing 'score' or 'explanation'. Received: {res}"
@@ -207,9 +183,27 @@ async def evaluate(request: AppEvalRequest):
                 detail="LLM response did not contain score and explanation.",
             )
 
-        return {"score": res["score"], "explanation": res["explanation"]}
+        eval_response = {"score": res["score"], "explanation": res["explanation"]}
+
+        if os.environ.get("LOG_PATH"):
+            log_path = Path(os.environ.get("LOG_PATH"))
+            log_path.mkdir(parents=True, exist_ok=True)
+            # jsonl
+            with open(log_path / "eval-log.jsonl", "a") as f:
+                f.write(
+                    json.dumps(
+                        {
+                            "request": request.dict(),
+                            "completion": completion.to_dict(),
+                            "response": eval_response,
+                        }
+                    )
+                    + "\n"
+                )
+        return eval_response
 
     except Exception as e:
+        logger.error(f"Error during evaluation for dimension {request.dimension}: {e}")
         return {"error": str(e)}
 
 

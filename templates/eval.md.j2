@@ -1,0 +1,30 @@
+### Issue:
+{{ issue }}
+
+### Argument:
+{{ argument }}
+
+### Counter-argument:
+{{ counter_argument }}
+
+### Definition of {{ dimension_name }}:
+{{ dimension_definition }}
+
+### Task:
+Critically evaluate the {{ dimension_name }} of the counter-argument on a scale from 0 (extremely poor) to 1 (exceptional), using increments of 0.01.
+
+Be highly discerning and rigorous in your assessment:
+- Actively look for weaknesses, gaps, or areas for improvement.
+- A score of 1.0 should be reserved for responses that are flawless and could not be improved in any way—this should be extremely rare.
+- A score of 0.5 means the response is adequate but has clear room for improvement.
+- Most responses should fall between 0 and 0.8 unless they are truly outstanding.
+- Justify your score by referencing specific strengths and weaknesses in the counter-argument.
+
+Format your response as a single JSON object with exactly these keys:
+- key='explanation': A concise, critical explanation of your score, citing both strengths and weaknesses.
+- key='score': The score as a number between 0 and 1 (e.g., 0.00, 0.50, 0.79).
+
+### Example:
+{{"explanation":"The counter-argument addresses the main point but lacks depth and omits key evidence. Reasoning is mostly sound but could be clearer.","score":0.62}}
+
+Your response:
