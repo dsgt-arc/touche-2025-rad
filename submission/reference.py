@@ -1,7 +1,7 @@
 from elasticsearch import Elasticsearch
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
+from typing import Any, List
 
 client = Elasticsearch("https://touche25-rad.webis.de/arguments")
 index = "claimrev"
@@ -21,32 +21,10 @@ Types for Eval System
 """
 
 
-class Argument(BaseModel):
-    id: str
-    text: str
-
-
-class RetrievalResponse(BaseModel):
-    arguments: List[Argument]
-
-
-class SystemResponse(BaseModel):
-    utterance: str
-    response: RetrievalResponse
-
-
-class UserTurn(BaseModel):
-    utterance: str
-    systemResponse: SystemResponse
-
-
-class Simulation(BaseModel):
-    userTurns: List[UserTurn]
-
-
-class EvalRequest(BaseModel):
-    simulation: Simulation
-    userTurnIndex: int | None = None
+# class EvalRequest(BaseModel):
+#     model: str
+#     keep_alive: str
+#     messages: List[Message]
 
 
 """
@@ -116,40 +94,17 @@ async def respond(request: DebateRequest):
     return {"content": content, "arguments": arguments}
 
 
-# healthcheck endpoint
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-
-
 """
 Eval system endpoints
 """
 
 
-@app.post("/quantity")
-async def quantity(request: EvalRequest):
-    if not request.userTurnIndex:
-        return {"score": None}
-    return {"score": 1}
+@app.post("/evaluate")
+async def evaluate(request: Any):
+    return {"message": {"content": {"explanation": "your explanation", "score": 0.5}}}
 
 
-@app.post("/quality")
-async def quality(request: EvalRequest):
-    if not request.userTurnIndex:
-        return {"score": None}
-    return {"score": 1}
-
-
-@app.post("/relation")
-async def relation(request: EvalRequest):
-    if not request.userTurnIndex:
-        return {"score": None}
-    return {"score": 1}
-
-
-@app.post("/manner")
-async def manner(request: EvalRequest):
-    if not request.userTurnIndex:
-        return {"score": None}
-    return {"score": 1}
+# healthcheck endpoint
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

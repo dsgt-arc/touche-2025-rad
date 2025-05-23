@@ -1,11 +1,15 @@
 import os
-from typing import List
-
+from typing import Any
 import requests
+import logging
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 BASE_URL = os.getenv("BASE_URL", "http://app:8500")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class Message(BaseModel):
@@ -17,32 +21,10 @@ class Request(BaseModel):
     messages: list[Message]
 
 
-class Argument(BaseModel):
-    id: str
-    text: str
-
-
-class RetrievalResponse(BaseModel):
-    arguments: List[Argument]
-
-
-class SystemResponse(BaseModel):
-    utterance: str
-    response: RetrievalResponse
-
-
-class UserTurn(BaseModel):
-    utterance: str
-    systemResponse: SystemResponse
-
-
-class Simulation(BaseModel):
-    userTurns: List[UserTurn]
-
-
-class EvalRequest(BaseModel):
-    simulation: Simulation
-    userTurnIndex: int | None = None
+# class EvalRequest(BaseModel):
+#     model: str
+#     keep_alive: str
+#     messages: List[Message]
 
 
 app = FastAPI()
@@ -54,25 +36,18 @@ async def respond(request: Request):
     return resp.json()
 
 
-@app.post("/quantity")
-async def quantity(request: EvalRequest):
-    resp = requests.post(f"{BASE_URL}/quantity", json=request.dict())
-    return resp.json()
-
-
-@app.post("/quality")
-async def quality(request: EvalRequest):
-    resp = requests.post(f"{BASE_URL}/quality", json=request.dict())
-    return resp.json()
-
-
-@app.post("/relation")
-async def relation(request: EvalRequest):
-    resp = requests.post(f"{BASE_URL}/relation", json=request.dict())
-    return resp.json()
-
-
-@app.post("/manner")
-async def manner(request: EvalRequest):
-    resp = requests.post(f"{BASE_URL}/manner", json=request.dict())
+@app.post("/evaluate")
+async def evaluate(request: Any):
+    target_url = f"{BASE_URL}/evaluate"
+    payload = request.dict()
+    logger.info(f"Proxy: Sending POST to {target_url} with payload: {payload}")
+    resp = requests.post(target_url, json=payload)
+    logger.info(f"Proxy: Received status {resp.status_code} from {target_url}")
+    if resp.status_code >= 400:
+        try:
+            logger.error(f"Proxy: Error response body from {target_url}: {resp.json()}")
+        except requests.exceptions.JSONDecodeError:
+            logger.error(
+                f"Proxy: Error response body (not JSON) from {target_url}: {resp.text}"
+            )
     return resp.json()

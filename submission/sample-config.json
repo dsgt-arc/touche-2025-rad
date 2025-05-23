@@ -23,7 +23,7 @@
       "Clarity": {
         "class": "PromptedEvaluator",
         "llm": {
-          "url": "https://gateway:3000/inference",
+          "url": "http://localhost:8080/evaluate",
           "model": "default",
           "keep_alive": "24h"
         },
@@ -37,7 +37,7 @@
       "Global Relevance": {
         "class": "PromptedEvaluator",
         "llm": {
-          "url": "https://gateway:3000/inference",
+          "url": "http://localhost:8080/evaluate",
           "model": "default",
           "keep_alive": "24h"
         },
@@ -51,7 +51,7 @@
       "Local Relevance": {
         "class": "PromptedEvaluator",
         "llm": {
-          "url": "https://gateway:3000/inference",
+          "url": "http://localhost:8080/evaluate",
           "model": "default",
           "keep_alive": "24h"
         },

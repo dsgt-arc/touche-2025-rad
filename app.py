@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, List
 import os
 from jinja2 import Environment, PackageLoader, select_autoescape
 from openai import OpenAI
@@ -30,6 +30,12 @@ class Message(BaseModel):
 
 class Request(BaseModel):
     messages: List[Message]
+
+
+# class EvalRequest(BaseModel):
+#     model: str
+#     keep_alive: str
+#     messages: List[Message]
 
 
 app = FastAPI()
@@ -90,6 +96,15 @@ async def respond(request: Request):
                 + "\n"
             )
     return resp
+
+
+@app.post("/evaluate")
+async def evaluate(request: Any):
+    response = model_client._client.inference(
+        model_name=TensorZeroChatResourceModel.GPT4_O_LATEST,
+        input={"messages": [{"role": request.role, "content": request.content}]},
+    )
+    return {"message": {"content": response.content[0].text}}
 
 
 # healthcheck endpoint
