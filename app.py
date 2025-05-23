@@ -14,10 +14,12 @@ from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
 load_dotenv()
 env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
 
-# openai/gpt-4o
 # google/gemini-2.5-flash-preview-05-20
-# google/gemma-3n-e4b-it:free
-MODEL = os.getenv("MODEL", "google/gemini-2.5-flash-preview-05-20")
+# openai/gpt-4o
+# openai/gpt-4.1
+# anthropic/claude-sonnet-4
+# google/gemini-2.5-pro-preview
+MODEL = os.getenv("MODEL", "google/gemini-2.5-pro-preview")
 SYSTEM = os.getenv("SYSTEM", "dev")
 
 
