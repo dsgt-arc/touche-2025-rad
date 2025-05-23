@@ -1,17 +1,17 @@
 from typing import List
 import os
+from jinja2 import Environment, PackageLoader, select_autoescape
+from openai import OpenAI
+import yaml
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
-from touche_rad.ai.tensorzero import TensorZeroClient
-from touche_rad.core.context import DebateContext
-from touche_rad.core.machine import DebateMachine
-from touche_rad.core.rag_pipeline import RAGDebater
-from touche_rad.core.strategy.drivers.rag import RAGStrategy
+from typing import Optional
 
 load_dotenv()
+env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
 
 
 class Message(BaseModel):
@@ -21,39 +21,51 @@ class Message(BaseModel):
 
 class Request(BaseModel):
     messages: List[Message]
+    model: Optional[str] = "openai/gpt-4o"
 
 
 app = FastAPI()
 
 retriever = ElasticsearchRetriever()
-model_client = TensorZeroClient(
-    base_url=os.getenv("TENSORZERO_GATEWAY_URL", "http://localhost:3000")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
 )
-rag_debater = RAGDebater(retriever, model_client)
-strategy = RAGStrategy(rag_debater, retrieval_mode="text")
 
 
 @app.post("/")
 async def respond(request: Request):
     # get the message for user and assistant
     # we're given some odd number of messages that need to be placed into the context appropriately
-    user_messages = [msg.content for msg in request.messages if msg.role == "user"]
-    assistant_messages = [
-        msg.content for msg in request.messages if msg.role == "assistant"
-    ]
 
-    context = DebateContext(
-        client=model_client,
-        user_utterances=user_messages,
-        system_utterances=assistant_messages,
-        current_turn=len(user_messages),
-        max_turns=5,
+    # let's generate the prompt that we want to use
+    evidence = retriever.retrieve(
+        request.messages[0].content,
+        mode="text",
+        k=10,
     )
-    _ = DebateMachine(model=context)
+    # let's generate a yaml document that contains topic, tags, text, and references
+    subset = [
+        {k: v for k, v in item.items() if k in ["topic", "text"]} for item in evidence
+    ]
+    prompt = env.get_template("prompt.md.j2").render(
+        evidence=yaml.dump(subset),
+        context=request.messages[-1].content,
+    )
 
-    # NOTE: this has been rewritten return a tuple of content and evidence for the RAG strategy
-    content, evidence = strategy.generate_response(context)
-    return {"content": content, "arguments": evidence}
+    completion = client.chat.completions.create(
+        model=request.model,
+        messages=request.messages
+        + [
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+    )
+    content = completion.choices[0].message.content
+    resp = {"content": content, "arguments": evidence}
+    return resp
 
 
 # healthcheck endpoint

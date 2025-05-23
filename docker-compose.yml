@@ -4,10 +4,11 @@ services:
     restart: always
     volumes: [".:/app"]
     ports: ["8500:8500"]
-    command: fastapi run --port 8500 app.py
+    command: fastapi run --reload --port 8500 app.py
     environment:
       - TEXTSYNTH_API_KEY
       - OPENAI_API_KEY
+      - OPENROUTER_API_KEY
       - STREAMLIT_SERVER_ADDRESS
       - TENSORZERO_GATEWAY_URL=http://gateway:3000
       - TENSORZERO_CLICKHOUSE_URL

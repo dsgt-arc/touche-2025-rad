@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "elasticsearch<9.0.0",
     "fastapi[standard]>=0.115.9",
+    "jinja2>=3.1.6",
     "pydantic>=2.11.3",
+    "pyyaml>=6.0.2",
     "requests>=2.32.3",
 ]
