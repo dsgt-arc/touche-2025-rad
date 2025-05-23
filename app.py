@@ -157,6 +157,7 @@ DIMENSION_DEFINITIONS = {
 
 @app.post("/evaluate")
 async def evaluate(request: AppEvalRequest):
+    MAX_RETRIES = 5
     definition = DIMENSION_DEFINITIONS[request.dimension]
     prompt_template = env.get_template("eval.md.j2")
     prompt = prompt_template.render(
@@ -166,45 +167,56 @@ async def evaluate(request: AppEvalRequest):
         dimension_name=request.dimension,
         dimension_definition=definition,
     )
-    try:
-        completion = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
-        )
-        response_content = completion.choices[0].message.content
-        res = json.loads(response_content)
-        if "score" not in res or "explanation" not in res:
-            logger.error(
-                f"LLM response for {request.dimension_name} missing 'score' or 'explanation'. Received: {res}"
-            )
-            raise HTTPException(
-                status_code=500,
-                detail="LLM response did not contain score and explanation.",
-            )
 
-        eval_response = {"score": res["score"], "explanation": res["explanation"]}
+    for attempt in range(MAX_RETRIES):
+        try:
+            completion = client.chat.completions.create(
+                model=MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"},
+            )
+            response_content = completion.choices[0].message.content
+            res = json.loads(response_content)
 
-        if os.environ.get("LOG_PATH"):
-            log_path = Path(os.environ.get("LOG_PATH"))
-            log_path.mkdir(parents=True, exist_ok=True)
-            # jsonl
-            with open(log_path / "eval-log.jsonl", "a") as f:
-                f.write(
-                    json.dumps(
-                        {
-                            "request": request.dict(),
-                            "completion": completion.to_dict(),
-                            "response": eval_response,
-                        }
-                    )
-                    + "\n"
+            if "score" not in res or "explanation" not in res:
+                logger.warning(
+                    f"Attempt {attempt + 1}/{MAX_RETRIES}: LLM response for {request.dimension} missing 'score' or 'explanation'. Received: {res}"
                 )
-        return eval_response
+                if attempt == MAX_RETRIES - 1:
+                    raise HTTPException(
+                        status_code=500,
+                        detail="LLM response did not contain score and explanation after multiple retries.",
+                    )
+                continue
 
-    except Exception as e:
-        logger.error(f"Error during evaluation for dimension {request.dimension}: {e}")
-        return {"error": str(e)}
+            eval_response = {"score": res["score"], "explanation": res["explanation"]}
+
+            if os.environ.get("LOG_PATH"):
+                log_path = Path(os.environ.get("LOG_PATH"))
+                log_path.mkdir(parents=True, exist_ok=True)
+                with open(log_path / "eval-log.jsonl", "a") as f:
+                    f.write(
+                        json.dumps(
+                            {
+                                "request": request.dict(),
+                                "completion": completion.to_dict(),
+                                "response": eval_response,
+                            }
+                        )
+                        + "\n"
+                    )
+            return eval_response
+
+        except Exception as e:
+            logger.error(
+                f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during evaluation for dimension {request.dimension}: {e}"
+            )
+            if attempt == MAX_RETRIES - 1:  # Last attempt
+                return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
+
+    return {
+        "error": f"Evaluation failed for dimension {request.dimension} after {MAX_RETRIES} attempts."
+    }
 
 
 # healthcheck endpoint
