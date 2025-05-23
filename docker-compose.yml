@@ -1,6 +1,7 @@
 services:
   app: &app
     build: .
+    restart: always
     volumes: [".:/app"]
     ports: ["8500:8500"]
     command: fastapi run --port 8500 app.py
@@ -12,7 +13,11 @@ services:
       - TENSORZERO_CLICKHOUSE_URL
 
   gensimir:
-    build: ./submission
+    build:
+      context: ./submission
+      args:
+        BASE_URL: http://app:8500
+    restart: always
     ports: ["8080:8080", "8000:8000"]
     entrypoint: /genirsim/serve.sh
     environment:
