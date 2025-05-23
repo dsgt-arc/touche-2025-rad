@@ -1,6 +1,7 @@
 services:
   app: &app
     build: .
+    restart: always
     volumes: [".:/app"]
     ports: ["8500:8500"]
     command: fastapi run --port 8500 app.py
@@ -13,6 +14,7 @@ services:
 
   gensimir:
     build: ./submission
+    restart: always
     ports: ["8080:8080", "8000:8000"]
     entrypoint: /genirsim/serve.sh
     environment:
