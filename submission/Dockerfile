@@ -6,3 +6,6 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 COPY main.py start.sh proxy.py ./
+
+ARG BASE_URL=https://touche-2025-rad.dsgt-kaggle.org/api/
+ENV BASE_URL=${BASE_URL}
