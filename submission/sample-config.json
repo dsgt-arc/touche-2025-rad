@@ -1,13 +1,37 @@
 {
-  "topic": {},
-  "user": {
-    "class": "Touche25RADUser",
-    "url": "https://touche25-rad.webis.de/user-sim/api/chat",
-    "model": "base-user"
+  "simulation": {
+    "topic": {
+      "description": "Does pineapple belong on pizza?"
+    },
+    "user": {
+      "class": "Touche25RADUser",
+      "url": "https://touche25-rad.webis.de/user-sim/api/chat",
+      "model": "base-user"
+    },
+    "system": {
+      "class": "BasicChatSystem",
+      "url": "http://localhost:8080"
+    },
+    "maxTurns": 3
   },
-  "system": {
-    "class": "BasicChatSystem",
-    "url": "http://localhost:8080"
-  },
-  "maxTurns": 3
+  "evaluation": {
+    "evaluators": {
+      "Quantity": {
+        "class": "ApiBasedEvaluator",
+        "url": "http://localhost:8080/quantity"
+      },
+      "Quality": {
+        "class": "ApiBasedEvaluator",
+        "url": "http://localhost:8080/quality"
+      },
+      "Relation": {
+        "class": "ApiBasedEvaluator",
+        "url": "http://localhost:8080/relation"
+      },
+      "Manner": {
+        "class": "ApiBasedEvaluator",
+        "url": "http://localhost:8080/manner"
+      }
+    }
+  }
 }

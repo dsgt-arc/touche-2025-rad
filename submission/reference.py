@@ -12,8 +12,13 @@ class Message(BaseModel):
     content: str
 
 
-class Request(BaseModel):
+class DebateRequest(BaseModel):
     messages: List[Message]
+
+
+"""
+Fns for debate system
+"""
 
 
 def reply(messages: List[Message]):
@@ -67,8 +72,13 @@ def query_elastic(claim, size=1):
 app = FastAPI()
 
 
+"""
+Debate system endpoints
+"""
+
+
 @app.post("/")
-async def respond(request: Request):
+async def respond(request: DebateRequest):
     content, arguments = reply(request.messages)
     return {"content": content, "arguments": arguments}
 
