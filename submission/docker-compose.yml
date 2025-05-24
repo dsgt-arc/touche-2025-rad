@@ -2,7 +2,7 @@ services:
   app: &app
     build:
       context: ./base
-    image: dsgt-touche-2025-rad/base:v0.1
+    image: dsgt-touche-2025-rad/base:v0.2
     ports: ["8080:8080", "8000:8000"]
     entrypoint: /genirsim/serve.sh
     restart: always
