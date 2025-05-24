@@ -1,11 +1,13 @@
-import os
-from typing import List, Any
-import requests
 import logging
+import os
+from typing import Any, List
+
+import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 BASE_URL = os.getenv("BASE_URL", "http://app:8500")
+MODEL_NAME = os.environ["MODEL_NAME"]
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -79,12 +81,12 @@ app = FastAPI()
 
 @app.post("/")
 async def respond(request: Request):
-    resp = requests.post(f"{BASE_URL}/", json=request.dict())
+    resp = requests.post(f"{BASE_URL}/respond/{MODEL_NAME}", json=request.dict())
     return resp.json()
 
 
 async def process_evaluation(request: GenIREvalRequest, dimension_name: str):
-    target_url = f"{BASE_URL}/evaluate"
+    target_url = f"{BASE_URL}/evaluate/{MODEL_NAME}"
     idx = request.userTurnIndex
 
     if idx is None or idx < 0 or idx >= len(request.simulation.userTurns):

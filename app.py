@@ -14,14 +14,6 @@ from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
 
 load_dotenv()
 env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
-
-# google/gemini-2.5-flash-preview-05-20
-# openai/gpt-4o
-# openai/gpt-4.1
-# anthropic/claude-sonnet-4
-# google/gemini-2.5-pro-preview
-MODEL = os.getenv("MODEL", "google/gemini-2.5-pro-preview")
-SYSTEM = os.getenv("SYSTEM", "dev")
 logger = logging.getLogger(__name__)
 
 
@@ -96,11 +88,28 @@ client = OpenAI(
 )
 
 
-@app.post("/")
-async def respond(request: Request):
+def get_model(model):
+    # a list of supported models
+    supported_models = [
+        "openai/gpt-4o",
+        "openai/gpt-4.1",
+        "anthropic/claude-sonnet-4",
+        "anthropic/claude-opus-4",
+        "google/gemini-2.5-pro-preview",
+        "google/gemini-2.5-flash-preview-05-20",
+    ]
+    mapping = {name.split("/")[-1]: name for name in supported_models}
+    # purposely crash if we're not in the list
+    if model not in mapping:
+        raise ValueError(f"Model {model} is not supported.")
+    return mapping[model]
+
+
+@app.post("/respond/{model_name}")
+async def respond(request: Request, model_name: str):
     # get the message for user and assistant
     # we're given some odd number of messages that need to be placed into the context appropriately
-    print(request)
+    logging.info(request)
     # let's generate the prompt that we want to use
     evidence = retriever.retrieve(
         request.messages[0].content,
@@ -116,8 +125,9 @@ async def respond(request: Request):
         context=request.messages[-1].content,
     )
 
+    model_fqn = get_model(model_name)
     completion = client.chat.completions.create(
-        model=MODEL,
+        model=model_fqn,
         messages=request.messages
         + [
             {
@@ -132,8 +142,7 @@ async def respond(request: Request):
     if os.environ.get("LOG_PATH"):
         log_path = Path(os.environ.get("LOG_PATH"))
         log_path.mkdir(parents=True, exist_ok=True)
-        # jsonl
-        with open(log_path / "log.jsonl", "a") as f:
+        with open(log_path / f"respond_{model_name}.jsonl", "a") as f:
             f.write(
                 json.dumps(
                     {
@@ -155,8 +164,8 @@ DIMENSION_DEFINITIONS = {
 }
 
 
-@app.post("/evaluate")
-async def evaluate(request: AppEvalRequest):
+@app.post("/evaluate/{model_name}")
+async def evaluate(request: AppEvalRequest, model_name: str):
     MAX_RETRIES = 5
     definition = DIMENSION_DEFINITIONS[request.dimension]
     prompt_template = env.get_template("eval.md.j2")
@@ -167,11 +176,12 @@ async def evaluate(request: AppEvalRequest):
         dimension_name=request.dimension,
         dimension_definition=definition,
     )
+    model_fqn = get_model(model_name)
 
     for attempt in range(MAX_RETRIES):
         try:
             completion = client.chat.completions.create(
-                model=MODEL,
+                model=model_fqn,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
             )
@@ -188,25 +198,6 @@ async def evaluate(request: AppEvalRequest):
                         detail="LLM response did not contain score and explanation after multiple retries.",
                     )
                 continue
-
-            eval_response = {"score": res["score"], "explanation": res["explanation"]}
-
-            if os.environ.get("LOG_PATH"):
-                log_path = Path(os.environ.get("LOG_PATH"))
-                log_path.mkdir(parents=True, exist_ok=True)
-                with open(log_path / "eval-log.jsonl", "a") as f:
-                    f.write(
-                        json.dumps(
-                            {
-                                "request": request.dict(),
-                                "completion": completion.to_dict(),
-                                "response": eval_response,
-                            }
-                        )
-                        + "\n"
-                    )
-            return eval_response
-
         except Exception as e:
             logger.error(
                 f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during evaluation for dimension {request.dimension}: {e}"
@@ -214,9 +205,23 @@ async def evaluate(request: AppEvalRequest):
             if attempt == MAX_RETRIES - 1:  # Last attempt
                 return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
 
-    return {
-        "error": f"Evaluation failed for dimension {request.dimension} after {MAX_RETRIES} attempts."
-    }
+    eval_response = {"score": res["score"], "explanation": res["explanation"]}
+
+    if os.environ.get("LOG_PATH"):
+        log_path = Path(os.environ.get("LOG_PATH"))
+        log_path.mkdir(parents=True, exist_ok=True)
+        with open(log_path / f"eval-{model_name}.jsonl", "a") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "request": request.dict(),
+                        "completion": completion.to_dict(),
+                        "response": eval_response,
+                    }
+                )
+                + "\n"
+            )
+    return eval_response
 
 
 # healthcheck endpoint
