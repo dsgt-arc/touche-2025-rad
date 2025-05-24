@@ -13,6 +13,8 @@ from pydantic import BaseModel
 from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
 import cachetools
 
+MAX_RETRIES = 5
+
 load_dotenv()
 env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
 logger = logging.getLogger(__name__)
@@ -137,19 +139,29 @@ async def respond(request: Request, model_name: str):
     )
 
     model_fqn = get_model(model_name)
-    completion = client.chat.completions.create(
-        model=model_fqn,
-        messages=request.messages
-        + [
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
-    )
-    content = completion.choices[0].message.content
+    for attempt in range(MAX_RETRIES):
+        try:
+            completion = client.chat.completions.create(
+                model=model_fqn,
+                messages=request.messages
+                + [
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+            )
+            content = completion.choices[0].message.content
+            if not content:
+                raise ValueError("Empty response from model.")
+            break
+        except Exception as e:
+            logger.error(
+                f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during response generation: {e}"
+            )
+            if attempt == MAX_RETRIES - 1:
+                return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
     resp = {"content": content, "arguments": evidence}
-
     if os.environ.get("LOG_PATH"):
         log_path = Path(os.environ.get("LOG_PATH")) / "respond"
         log_path.mkdir(parents=True, exist_ok=True)
@@ -225,8 +237,6 @@ def process_genireval(request: GenIREvalRequest) -> AppEvalRequest:
     ),
 )
 def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
-    MAX_RETRIES = 5
-
     app_request = process_genireval(request)
     prompt_template = env.get_template("eval.md.j2")
     prompt = prompt_template.render(
