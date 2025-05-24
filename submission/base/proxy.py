@@ -82,13 +82,13 @@ async def process_evaluation(
     request: GenIREvalRequest, dimension_name: str
 ) -> EvalResponse:
     target_url = f"{BASE_URL}/evaluate/{MODEL_NAME}"
-    logger.info(
-        f"Proxy: Sending {dimension_name} evaluation to {target_url} with payload: {request.dict()}"
-    )
+    # logger.info(
+    #     f"Proxy: Sending {dimension_name} evaluation to {target_url} with payload: {request.dict()}"
+    # )
     resp = requests.post(target_url, json=request.dict())
-    logger.info(
-        f"Proxy: Received status {resp.status_code} from {target_url} for {dimension_name} evaluation"
-    )
+    # logger.info(
+    #     f"Proxy: Received status {resp.status_code} from {target_url} for {dimension_name} evaluation"
+    # )
     return EvalResponse(**(resp.json()[dimension_name]))
 
 

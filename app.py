@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from touche_rad.ai.elasticsearch_retriever import ElasticsearchRetriever
+import cachetools
 
 load_dotenv()
 env = Environment(loader=PackageLoader("app"), autoescape=select_autoescape())
@@ -71,6 +72,10 @@ class AppEvalRequest(BaseModel):
     issue: str
     argument: str
     counter_argument: str
+
+    # make this hashable
+    def __hash__(self):
+        return hash((self.issue, self.argument, self.counter_argument))
 
 
 class EvalScore(BaseModel):
@@ -146,9 +151,9 @@ async def respond(request: Request, model_name: str):
     resp = {"content": content, "arguments": evidence}
 
     if os.environ.get("LOG_PATH"):
-        log_path = Path(os.environ.get("LOG_PATH"))
+        log_path = Path(os.environ.get("LOG_PATH")) / "respond"
         log_path.mkdir(parents=True, exist_ok=True)
-        with open(log_path / f"respond_{model_name}.jsonl", "a") as f:
+        with open(log_path / f"{model_name}.jsonl", "a") as f:
             f.write(
                 json.dumps(
                     {
@@ -191,9 +196,6 @@ def get_evaluate_schema():
     }
 
 
-# TODO: lru_cache this by making AppEvalRequest hashable
-
-
 def process_genireval(request: GenIREvalRequest) -> AppEvalRequest:
     idx = request.userTurnIndex
 
@@ -214,8 +216,15 @@ def process_genireval(request: GenIREvalRequest) -> AppEvalRequest:
     )
 
 
-@app.post("/evaluate/{model_name}")
-async def evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
+# NOTE: this is inelegant, but we need to cache the initial request and the model name
+# but the request is not really hashable so we have to use a custom hash function
+@cachetools.cached(
+    cache=cachetools.LRUCache(maxsize=128),
+    key=lambda request, model_name: cachetools.keys.hashkey(
+        (process_genireval(request), model_name)
+    ),
+)
+def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
     MAX_RETRIES = 5
 
     app_request = process_genireval(request)
@@ -252,9 +261,9 @@ async def evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
                 return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
 
     if os.environ.get("LOG_PATH"):
-        log_path = Path(os.environ.get("LOG_PATH"))
+        log_path = Path(os.environ.get("LOG_PATH")) / "evaluate"
         log_path.mkdir(parents=True, exist_ok=True)
-        with open(log_path / f"evaluate_{model_name}.jsonl", "a") as f:
+        with open(log_path / f"{model_name}.jsonl", "a") as f:
             f.write(
                 json.dumps(
                     {
@@ -266,6 +275,11 @@ async def evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
                 + "\n"
             )
     return eval_response
+
+
+@app.post("/evaluate/{model_name}")
+async def evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
+    return cached_evaluate(request, model_name)
 
 
 # healthcheck endpoint
