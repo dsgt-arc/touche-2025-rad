@@ -169,3 +169,6 @@ chroma_db/
 # Data files
 *.parquet
 *.png
+
+.data/
+.scratch/

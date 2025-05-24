@@ -36,6 +36,7 @@ dependencies = [
     "elasticsearch~=8.15.1",
     "fastapi[standard]>=0.115.9",
     "pydantic>=2.11.4",
+    "cachetools>=5.5.2",
 ]
 
 [project.urls]

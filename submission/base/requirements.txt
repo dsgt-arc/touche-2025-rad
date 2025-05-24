@@ -49,14 +49,16 @@ idna==3.10
     #   httpx
     #   requests
 jinja2==3.1.6
-    # via fastapi
+    # via
+    #   submission (pyproject.toml)
+    #   fastapi
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.11.4
+pydantic==2.11.5
     # via
     #   submission (pyproject.toml)
     #   fastapi
@@ -71,7 +73,9 @@ python-dotenv==1.1.0
 python-multipart==0.0.20
     # via fastapi
 pyyaml==6.0.2
-    # via uvicorn
+    # via
+    #   submission (pyproject.toml)
+    #   uvicorn
 requests==2.32.3
     # via submission (pyproject.toml)
 rich==14.0.0
@@ -100,7 +104,7 @@ typing-extensions==4.13.2
     #   rich-toolkit
     #   typer
     #   typing-inspection
-typing-inspection==0.4.0
+typing-inspection==0.4.1
     # via pydantic
 urllib3==2.4.0
     # via

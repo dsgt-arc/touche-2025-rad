@@ -8,98 +8,19 @@ services:
     ports: ["8500:8500"]
     command: fastapi run --reload --port 8500 app.py
     environment:
-      - TEXTSYNTH_API_KEY
-      - OPENAI_API_KEY
       - OPENROUTER_API_KEY
-      - STREAMLIT_SERVER_ADDRESS
-      - TENSORZERO_GATEWAY_URL=http://gateway:3000
-      - TENSORZERO_CLICKHOUSE_URL
       - LOG_PATH=/var/log
 
+  # proxy service
   gensimir:
     build:
-      context: ./submission
+      context: ./submission/base
       args:
         BASE_URL: http://app:8500
+        MODEL_NAME: gemini-2.5-flash-preview-05-20
     restart: always
     ports: ["8080:8080", "8000:8000"]
     entrypoint: /genirsim/serve.sh
-    environment:
-      - BASE_URL=http://app:8500
     depends_on:
       app:
         condition: service_started
-
-  chat_demo:
-    <<: *app
-    ports: ["8501:8501"]
-    command: streamlit run demo/chat_app.py
-
-  # tensorzero demo setup stuff
-  clickhouse:
-    image: clickhouse/clickhouse-server:24.12-alpine
-    environment:
-      - CLICKHOUSE_USER
-      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
-      - CLICKHOUSE_PASSWORD
-    ports:
-      - "8123:8123"
-    healthcheck:
-      test: wget --spider --tries 1 http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123/ping
-      start_period: 30s
-      start_interval: 1s
-      timeout: 1s
-
-  gateway:
-    image: tensorzero/gateway
-    volumes:
-      - ./config:/app/config:ro
-    command: --config-file /app/config/tensorzero.toml
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
-      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123
-    ports:
-      - "3000:3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-
-  ui:
-    image: tensorzero/ui
-    volumes:
-      - ./config:/app/config:ro
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:?Environment variable OPENAI_API_KEY must be set.}
-      - TENSORZERO_CLICKHOUSE_URL=http://${CLICKHOUSE_USER}:${CLICKHOUSE_PASSWORD}@clickhouse:8123
-      - TENSORZERO_GATEWAY_URL=http://gateway:3000
-    ports:
-      - "4000:4000"
-    depends_on:
-      clickhouse:
-        condition: service_healthy
-
-  # This will only get run in a production profile.
-  #   docker compose --profile prod up
-  # https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app
-  oauth2-proxy:
-    profiles: [prod]
-    restart: always
-    image: quay.io/oauth2-proxy/oauth2-proxy:v7.8.1
-    # https://github.com/oauth2-proxy/oauth2-proxy/issues/1669
-    command: >
-      --email-domain=*
-      --upstream=http://app:8501/
-      --redirect-url=https://${DOMAIN_NAME?domain name not set}/oauth2/callback
-      --http-address=0.0.0.0:8502
-      --provider=github
-      --github-org=dsgt-kaggle-clef
-      --scope=user:email,read:org
-    ports:
-      - 8502:8502
-    environment:
-      - OAUTH2_PROXY_CLIENT_ID
-      - OAUTH2_PROXY_CLIENT_SECRET
-      - OAUTH2_PROXY_COOKIE_SECRET
-      - DOMAIN_NAME

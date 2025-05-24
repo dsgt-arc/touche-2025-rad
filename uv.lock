@@ -4113,6 +4113,7 @@ name = "touche-rad"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cachetools" },
     { name = "chromadb" },
     { name = "duckdb" },
     { name = "elasticsearch" },
@@ -4143,6 +4144,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cachetools", specifier = ">=5.5.2" },
     { name = "chromadb" },
     { name = "duckdb" },
     { name = "elasticsearch", specifier = "~=8.15.1" },
