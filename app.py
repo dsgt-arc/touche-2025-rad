@@ -6,6 +6,7 @@ import yaml
 from pathlib import Path
 import json
 import logging
+import time
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -118,6 +119,14 @@ def get_model(model):
     return mapping[model]
 
 
+def log_data(model_name, prefix, data):
+    if os.environ.get("LOG_PATH"):
+        log_path = Path(os.environ.get("LOG_PATH")) / prefix
+        log_path.mkdir(parents=True, exist_ok=True)
+        with open(log_path / f"{model_name}.jsonl", "a") as f:
+            f.write(json.dumps(data) + "\n")
+
+
 @app.post("/respond/{model_name}")
 async def respond(request: Request, model_name: str):
     # get the message for user and assistant
@@ -151,6 +160,7 @@ async def respond(request: Request, model_name: str):
                     }
                 ],
             )
+            log_data(model_name, "completion", completion.to_dict())
             content = completion.choices[0].message.content
             if not content:
                 raise ValueError("Empty response from model.")
@@ -160,22 +170,19 @@ async def respond(request: Request, model_name: str):
                 f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during response generation: {e}"
             )
             if attempt == MAX_RETRIES - 1:
-                return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
+                raise e
+            # sleep for a bit before retrying
+            time.sleep(1)
     resp = {"content": content, "arguments": evidence}
-    if os.environ.get("LOG_PATH"):
-        log_path = Path(os.environ.get("LOG_PATH")) / "respond"
-        log_path.mkdir(parents=True, exist_ok=True)
-        with open(log_path / f"{model_name}.jsonl", "a") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "request": request.dict(),
-                        "completion": completion.to_dict(),
-                        "response": resp,
-                    }
-                )
-                + "\n"
-            )
+    log_data(
+        model_name,
+        "respond",
+        {
+            "request": request.dict(),
+            "completion": completion.to_dict(),
+            "response": resp,
+        },
+    )
     return resp
 
 
@@ -231,7 +238,7 @@ def process_genireval(request: GenIREvalRequest) -> AppEvalRequest:
 # NOTE: this is inelegant, but we need to cache the initial request and the model name
 # but the request is not really hashable so we have to use a custom hash function
 @cachetools.cached(
-    cache=cachetools.LRUCache(maxsize=128),
+    cache=cachetools.TTLCache(maxsize=128, ttl=10),
     key=lambda request, model_name: cachetools.keys.hashkey(
         (process_genireval(request), model_name)
     ),
@@ -260,6 +267,8 @@ def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
                     },
                 },
             )
+            # log the whole completion to a completion log
+            log_data(model_name, "completion", completion.to_dict())
             response_content = completion.choices[0].message.content
             eval_response = json.loads(response_content)
             break
@@ -268,22 +277,18 @@ def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
                 f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during evaluation: {e}"
             )
             if attempt == MAX_RETRIES - 1:  # Last attempt
-                return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
-
-    if os.environ.get("LOG_PATH"):
-        log_path = Path(os.environ.get("LOG_PATH")) / "evaluate"
-        log_path.mkdir(parents=True, exist_ok=True)
-        with open(log_path / f"{model_name}.jsonl", "a") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "request": request.dict(),
-                        "completion": completion.to_dict(),
-                        "response": eval_response,
-                    }
-                )
-                + "\n"
-            )
+                raise e
+            # sleep for a bit before retrying
+            time.sleep(1)
+    log_data(
+        model_name,
+        "evaluate",
+        {
+            "request": request.dict(),
+            "completion": completion.to_dict(),
+            "response": eval_response,
+        },
+    )
     return eval_response
 
 
