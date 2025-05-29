@@ -265,7 +265,7 @@ def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
             break
         except Exception as e:
             logger.error(
-                f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during evaluation for dimension {request.dimension}: {e}"
+                f"Attempt {attempt + 1}/{MAX_RETRIES}: Error during evaluation: {e}"
             )
             if attempt == MAX_RETRIES - 1:  # Last attempt
                 return {"error": f"Failed after {MAX_RETRIES} attempts: {str(e)}"}
