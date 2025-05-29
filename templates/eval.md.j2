@@ -27,10 +27,10 @@ Be highly discerning and rigorous in your assessment:
 - Most responses should fall between 0 and 0.8 unless they are truly outstanding.
 - Justify your score by referencing specific strengths and weaknesses in the counter-argument.
 
-**IMPORTANT** The response MUST be valid JSON.
+**IMPORTANT** The response MUST be valid JSON. Do NOT include json fencing, just return the json object.
+
 Format your response as a single JSON object with exactly these keys:
 
-```json
 {
     "quantity": {
         "explanation": "...",
@@ -49,7 +49,6 @@ Format your response as a single JSON object with exactly these keys:
         "score": 0.50
     }
 }
-```
 
 - explanation: A concise, critical explanation of your score, citing both strengths and weaknesses.
 - score: The score as a number between 0 and 1 (e.g., 0.00, 0.50, 0.79).

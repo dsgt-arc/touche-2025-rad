@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 import logging
 import time
+import re
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -100,6 +101,20 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=os.getenv("OPENROUTER_API_KEY"),
 )
+
+
+def strip_markdown_json(text: str) -> str:
+    """
+    Removes markdown code fences from a string suspected to contain JSON
+    using regular expressions.
+    Handles ```json ... ```, ``` ... ```, and variations with whitespace.
+    It will extract the first match found.
+    """
+    text = text.strip()
+    match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    return text
 
 
 def get_model(model):
@@ -270,7 +285,8 @@ def cached_evaluate(request: GenIREvalRequest, model_name: str) -> EvalResponse:
             # log the whole completion to a completion log
             log_data(model_name, "completion", completion.to_dict())
             response_content = completion.choices[0].message.content
-            eval_response = json.loads(response_content)
+            cleaned_content = strip_markdown_json(response_content)
+            eval_response = json.loads(cleaned_content)
             break
         except Exception as e:
             logger.error(
