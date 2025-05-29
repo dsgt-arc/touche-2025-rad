@@ -253,7 +253,7 @@ def process_genireval(request: GenIREvalRequest) -> AppEvalRequest:
 # NOTE: this is inelegant, but we need to cache the initial request and the model name
 # but the request is not really hashable so we have to use a custom hash function
 @cachetools.cached(
-    cache=cachetools.TTLCache(maxsize=128, ttl=10),
+    cache=cachetools.TTLCache(maxsize=128, ttl=30),
     key=lambda request, model_name: cachetools.keys.hashkey(
         (process_genireval(request), model_name)
     ),
