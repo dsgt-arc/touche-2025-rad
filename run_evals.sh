@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO add base images to repo that include the evals images
+
 MODEL=${1?model is required}
 
 docker run --rm -it \
